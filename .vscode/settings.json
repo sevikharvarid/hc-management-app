@@ -1,3 +1,11 @@
 {
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "editor.formatOnSaveMode": "modifications",
+    "editor.formatOnSave": true,
+    "dart.analyzerPath": null,
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit",
+        "source.organizeImports": "explicit",
+        "source.formatOnSave": "never"
+    },
+    "dart.flutterSdkPath": "/Users/sephikharvaridhilmawar/Documents/FlutterSDK/flutter"
 }
