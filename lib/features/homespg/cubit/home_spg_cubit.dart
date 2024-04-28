@@ -4,7 +4,6 @@ import 'dart:developer';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:hc_management_app/config/service/background_service_init.dart';
 import 'package:hc_management_app/domain/model/list_spg.dart';
 import 'package:hc_management_app/domain/model/stores.dart';
 import 'package:hc_management_app/domain/service/data_response.dart';
@@ -12,7 +11,7 @@ import 'package:hc_management_app/features/homespg/repository/home_spg_repositor
 import 'package:hc_management_app/shared/utils/helpers/general_helpers.dart';
 import 'package:hc_management_app/shared/utils/preferences/preferences.dart';
 import 'package:hc_management_app/shared/utils/preferences/preferences_key.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:location/location.dart';
 
 part 'home_spg_state.dart';
 
@@ -24,6 +23,12 @@ class HomeSpgCubit extends Cubit<HomeSpgState> {
   String? nameSPG;
   List<DataListSPG> listSPG = [];
   DataListSPG? dataSPG;
+
+  String? latitudeStore;
+  String? longitudeStore;
+
+  String? radiusStore;
+  double? radiusUser;
 
   List<DataStore> dataStores = [];
 
@@ -42,9 +47,9 @@ class HomeSpgCubit extends Cubit<HomeSpgState> {
     emit(HomeSpgLoading());
 
     // Inisialisasi layanan latar belakang jika izin diberikan
-    if (await Permission.location.isGranted) {
-      await BackgroundService.instance.init();
-    }
+    // if (await Permission.location.isGranted) {
+    //   await BackgroundService.instance.init();
+    // }
 
     var params = await preferences.read(PreferencesKey.userId);
 
@@ -59,6 +64,8 @@ class HomeSpgCubit extends Cubit<HomeSpgState> {
       } else {
         namaToko = "Toko belum di assign di user ini";
       }
+      emit(HomeSpgSuccessLoaded());
+      return;
     }
 
     if (response.status == Status.error) {
@@ -68,6 +75,62 @@ class HomeSpgCubit extends Cubit<HomeSpgState> {
 
     emit(HomeSpgLoaded());
   }
+
+  
+
+  Future<void> checkRadiusStore() async {
+    emit(HomeSpgLoading());
+
+    var paramsRadius = 1;
+    final response =
+        await homeSpgRepository.getRadiusStoreLocation(paramsRadius);
+
+    latitudeStore = response.data["latt"];
+    longitudeStore = response.data["long"];
+    radiusStore = response.data["radius"].toString();
+
+    double radius = await generalHelper.getPositionRadius(
+      double.tryParse(latitudeStore!),
+      double.tryParse(longitudeStore!),
+    );
+
+    radiusUser = radius;
+
+    log(" radius : $radiusUser");
+
+    emit(HomeSpgLoaded());
+  }
+
+  void checkGPS() async {
+    Location location = Location();
+    bool ison = await location.serviceEnabled();
+
+    if (!ison) {
+      //if defvice is off
+      bool isturnedon = await location.requestService();
+      if (isturnedon) {
+      } else {
+        checkGPS();
+      }
+    }
+  }
+
+  Future<bool> checkAndTurnOnGPS() async {
+    Location location = Location();
+    bool isOn = await location.serviceEnabled();
+
+    if (!isOn) {
+      bool isTurnedOn = await location.requestService();
+      if (isTurnedOn) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return true;
+    }
+  }
+
 
   void saveImage({String? image}) {
     emit(HomeSpgLoading());

@@ -10,7 +10,6 @@ import 'package:hc_management_app/shared/widgets/alert/progress_dialog.dart';
 import 'package:hc_management_app/shared/widgets/atom/spacer.dart';
 import 'package:hc_management_app/shared/widgets/button/custom_button.dart';
 import 'package:hc_management_app/shared/widgets/text_field/custom_text_field.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -138,16 +137,20 @@ class _LoginPageState extends State<LoginPage> {
                   active: true,
                   margin: 20,
                   action: () async {
-                    if (await Permission
-                        .locationWhenInUse.serviceStatus.isDisabled) {
-                      showMessage(
-                          context, "Tolong aktifkan lokasi terlebih dahulu !");
-                    } else {
-                      cubit.postLogin(
+                    cubit.postLogin(
                         nik: nik!.text,
                         password: password!.text,
                       );
-                    }
+                    // if (await Permission
+                    //     .locationWhenInUse.serviceStatus.isDisabled) {
+                    //   showMessage(
+                    //       context, "Tolong aktifkan lokasi terlebih dahulu !");
+                    // } else {
+                    //   cubit.postLogin(
+                    //     nik: nik!.text,
+                    //     password: password!.text,
+                    //   );
+                    // }
                   },
                 ),
                 spaceHeight(

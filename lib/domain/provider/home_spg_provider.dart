@@ -57,6 +57,23 @@ class HomeSpgProvider {
     }
   }
 
+
+  Future<Map<String, dynamic>?> getRadiusStoreLocation(dynamic params) async {
+    try {
+      String paramsUrl = "/api/storelocations/$params";
+
+      apiProvider = HttpProvider(
+        baseUrl: baseUrl,
+        params: paramsUrl,
+      );
+
+      return await apiProvider.get();
+    } on Exception catch (e) {
+      log("Error message : $e");
+      throw Error();
+    }
+  }
+
   // Future<Map<String, dynamic>?> postSubmitData(dynamic params) async {
   //   try {
   //     String paramsUrl = "/api/absents";

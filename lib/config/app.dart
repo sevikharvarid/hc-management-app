@@ -19,8 +19,6 @@ import 'package:hc_management_app/features/profile/profile_spg/cubit/profile_spg
 import 'package:hc_management_app/features/profile/profile_spg/ui/profile_spg_page.dart';
 import 'package:hc_management_app/features/splash/cubit/splash_cubit.dart';
 import 'package:hc_management_app/features/splash/ui/splash_page.dart';
-import 'package:hc_management_app/shared/widgets/location_service/bloc/location_service_bloc.dart';
-import 'package:hc_management_app/shared/widgets/location_service/bloc/location_service_event.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({
@@ -30,106 +28,97 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // return ScreenUtilInit(
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (context) =>
-              LocationServiceBloc()..add(LocationServiceStarted()),
-          lazy: false,
+    return ScreenUtilInit(
+      designSize: const Size(360, 690),
+      builder: (_, __) => MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: "HC Management App",
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
         ),
-      ],
-      child: ScreenUtilInit(
-        designSize: const Size(360, 690),
-        builder: (_, __) => MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: "HC Management App",
-          theme: ThemeData(
-            primarySwatch: Colors.blue,
-          ),
-          // navigatorKey: AppConstant.navigatorKey(),
-          onGenerateRoute: (RouteSettings settings) {
-            switch (settings.name) {
-              case Routes.landing:
-                return CupertinoPageRoute(
-                  builder: (context) => BlocProvider<SplashCubit>(
-                    create: (context) => SplashCubit()..initCubit(),
-                    child: const SplashPage(),
-                  ),
-                );
-              case Routes.mainSales:
-                return CupertinoPageRoute(
-                  builder: (context) => BlocProvider(
-                    create: (context) => DashboardCubit()..changePage(0),
-                    child: const DashboardPage(),
-                  ),
-                );
+        // navigatorKey: AppConstant.navigatorKey(),
+        onGenerateRoute: (RouteSettings settings) {
+          switch (settings.name) {
+            case Routes.landing:
+              return CupertinoPageRoute(
+                builder: (context) => BlocProvider<SplashCubit>(
+                  create: (context) => SplashCubit()..initCubit(),
+                  child: const SplashPage(),
+                ),
+              );
+            case Routes.mainSales:
+              return CupertinoPageRoute(
+                builder: (context) => BlocProvider(
+                  create: (context) => DashboardCubit()..changePage(0),
+                  child: const DashboardPage(),
+                ),
+              );
 
-              case Routes.mainSPG:
-                return CupertinoPageRoute(
-                  builder: (context) => BlocProvider(
-                    create: (context) => DashboardSPGCubit()..changePage(0),
-                    child: const DashboardSPGPage(),
-                  ),
-                );
+            case Routes.mainSPG:
+              return CupertinoPageRoute(
+                builder: (context) => BlocProvider(
+                  create: (context) => DashboardSPGCubit()..changePage(0),
+                  child: const DashboardSPGPage(),
+                ),
+              );
 
-              case Routes.login:
-                return CupertinoPageRoute(
-                  builder: (context) => BlocProvider(
-                    create: (context) => LoginCubit(),
-                    child: const LoginPage(),
-                  ),
-                );
+            case Routes.login:
+              return CupertinoPageRoute(
+                builder: (context) => BlocProvider(
+                  create: (context) => LoginCubit(),
+                  child: const LoginPage(),
+                ),
+              );
 
-              case Routes.home:
-                return CupertinoPageRoute(
-                  builder: (context) => BlocProvider(
-                    create: (context) => HomeCubit()..initCubit(),
-                    child: const HomePage(),
-                  ),
-                );
+            case Routes.home:
+              return CupertinoPageRoute(
+                builder: (context) => BlocProvider(
+                  create: (context) => HomeCubit()..initCubit(),
+                  child: const HomePage(),
+                ),
+              );
 
-              case Routes.homeSPG:
-                return CupertinoPageRoute(
-                  builder: (context) => BlocProvider(
-                    create: (context) => HomeSpgCubit()..initCubit(),
-                    child: const HomeSpgPage(),
-                  ),
-                );
+            case Routes.homeSPG:
+              return CupertinoPageRoute(
+                builder: (context) => BlocProvider(
+                  create: (context) => HomeSpgCubit()..initCubit(),
+                  child: const HomeSpgPage(),
+                ),
+              );
 
-              case Routes.requestSales:
-                return CupertinoPageRoute(
-                  builder: (context) => BlocProvider(
-                    create: (context) => HomeSpgCubit()..initCubit(),
-                    child: const HomeSpgPage(),
-                  ),
-                );
+            case Routes.requestSales:
+              return CupertinoPageRoute(
+                builder: (context) => BlocProvider(
+                  create: (context) => HomeSpgCubit()..initCubit(),
+                  child: const HomeSpgPage(),
+                ),
+              );
 
-              case Routes.profileSales:
-                return CupertinoPageRoute(
-                  builder: (context) => BlocProvider(
-                    create: (context) => ProfileSalesCubit()..initCubit(),
-                    child: const ProfileSalesPage(),
-                  ),
-                );
+            case Routes.profileSales:
+              return CupertinoPageRoute(
+                builder: (context) => BlocProvider(
+                  create: (context) => ProfileSalesCubit()..initCubit(),
+                  child: const ProfileSalesPage(),
+                ),
+              );
 
-              case Routes.profileSPG:
-                return CupertinoPageRoute(
-                  builder: (context) => BlocProvider<ProfileSPGCubit>(
-                    create: (context) => ProfileSPGCubit()..initCubit(),
-                    child: const ProfileSPGPage(),
-                  ),
-                );
+            case Routes.profileSPG:
+              return CupertinoPageRoute(
+                builder: (context) => BlocProvider<ProfileSPGCubit>(
+                  create: (context) => ProfileSPGCubit()..initCubit(),
+                  child: const ProfileSPGPage(),
+                ),
+              );
 
-              default:
-                return CupertinoPageRoute(
-                  builder: (context) => BlocProvider<SplashCubit>(
-                    create: (context) => SplashCubit()..initCubit(),
-                    child: const SplashPage(),
-                  ),
-                );
-            }
-          },
-        ),
+            default:
+              return CupertinoPageRoute(
+                builder: (context) => BlocProvider<SplashCubit>(
+                  create: (context) => SplashCubit()..initCubit(),
+                  child: const SplashPage(),
+                ),
+              );
+          }
+        },
       ),
     );
   }

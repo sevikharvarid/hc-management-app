@@ -1,13 +1,13 @@
-library general_helper;
+// library general_helper;
 
-import 'package:equatable/equatable.dart';
+// import 'package:equatable/equatable.dart';
 
-abstract class LocationServiceEvent extends Equatable {
-  @override
-  List<Object?> get props => [];
-}
+// abstract class LocationServiceEvent extends Equatable {
+//   @override
+//   List<Object?> get props => [];
+// }
 
-class LocationServiceStarted extends LocationServiceEvent {
-  @override
-  List<Object?> get props => [];
-}
+// class LocationServiceStarted extends LocationServiceEvent {
+//   @override
+//   List<Object?> get props => [];
+// }

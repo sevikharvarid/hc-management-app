@@ -31,7 +31,10 @@ class HomeSpgPage extends StatefulWidget {
   State<HomeSpgPage> createState() => _HomeSpgPageState();
 }
 
+
+
 class _HomeSpgPageState extends State<HomeSpgPage> {
+  
   TextEditingController nameController = TextEditingController();
 
   TextEditingController searchController = TextEditingController();
@@ -58,6 +61,7 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
     });
   }
 
+
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<HomeSpgCubit>();
@@ -73,6 +77,11 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
 
         if (state is HomeSpgImageSaved) {
           Navigator.pop(context);
+        }
+
+        if (state is HomeSpgSuccessLoaded) {
+          Navigator.pop(context);
+          cubit.checkGPS();
         }
 
         if (state is HomeSpgSuccess) {
@@ -113,21 +122,7 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
             ),
             child: FloatingActionButton(
               backgroundColor: Colors.transparent,
-              onPressed: () async {
-                if (nameController.text.isNotEmpty) {
-                  var resultFR = await Navigator.push(
-                    context,
-                    CupertinoPageRoute(
-                        builder: (context) => const TakePicture()),
-                  );
-                  if (resultFR != null) {
-                    cubit.saveImage(image: resultFR);
-                  }
-                } else {
-                  showMessage("Pastikan tidak ada yang kosong !",
-                      "Pilih Nama terlebih dahulu", true, true);
-                }
-              },
+              onPressed: () => onPressedCamera(cubit),
               tooltip: 'Increment',
               elevation: 2.0,
               child: const Icon(
@@ -172,6 +167,7 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                           "Hello,",
                           style: GoogleFonts.nunito(
                             fontWeight: FontWeight.w400,
+                            color: AppColors.white,
                             fontSize: 20,
                           ),
                         ),
@@ -179,6 +175,8 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                           cubit.nameSPG ?? "NoName",
                           style: GoogleFonts.nunito(
                             fontWeight: FontWeight.w700,
+                            color: AppColors.white,
+
                             fontSize: 18,
                           ),
                         ),
@@ -207,7 +205,7 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                     delegate: SliverChildListDelegate(
                       [
                         spaceHeight(height: 20),
-                        header(),
+                        header(cubit),
                         spaceHeight(height: 20),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -260,9 +258,7 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                                   searchController: nameController,
                                   textHint: "Pilih Nama",
                                   bottomSheetLabel: "Pilih Nama",
-                                  onTap: () {
-                                    showStoreList(context, cubit);
-                                  },
+                                  onTap: () => onPressedListName(cubit),
                                 ),
                               ),
                             ],
@@ -317,7 +313,38 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
     );
   }
 
-  Widget header() {
+  void onPressedListName(HomeSpgCubit cubit) async {
+    bool gpsStatus = await cubit.checkAndTurnOnGPS();
+
+    if (gpsStatus) {
+      showStoreList(cubit);
+    } else {
+      onPressedListName(cubit);
+    }
+  }
+
+  void onPressedCamera(HomeSpgCubit cubit) async {
+    bool gpsStatus = await cubit.checkAndTurnOnGPS();
+
+    if (gpsStatus) {
+      if (nameController.text.isNotEmpty) {
+        var resultFR = await Navigator.push(
+          context,
+          CupertinoPageRoute(builder: (context) => const TakePicture()),
+        );
+        if (resultFR != null) {
+          cubit.saveImage(image: resultFR);
+        }
+      } else {
+        showMessage("Pastikan tidak ada yang kosong !",
+            "Pilih Nama terlebih dahulu", true, true);
+      }
+    } else {
+      onPressedCamera(cubit);
+    }
+  }
+
+  Widget header(HomeSpgCubit cubit) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 15),
       height: 150,
@@ -408,22 +435,37 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                     ),
                     title: "Masuk",
                     action: () async {
-                      if (await Permission
-                          .locationWhenInUse.serviceStatus.isDisabled) {
-                        showLocationMessage(
-                            "Tolong aktifkan lokasi terlebih dahulu !");
-                      } else {
-                        if (nameController.text.isNotEmpty) {
-                          showMessage(
-                              "Apakah anda yakin?",
-                              "Absen masuk pada tanggal ${GeneralHelper().convertDateToString(dateTime: DateTime.now())}",
-                              true,
-                              false);
+                      
+                      cubit.checkRadiusStore();
+
+                      await cubit.stream
+                          .firstWhere((state) => state is HomeSpgLoaded);
+
+                      double? radius = cubit.radiusUser;
+                      double? radiusStore = double.parse(cubit.radiusStore!);
+
+                      if (radius! > radiusStore) {
+                        if (await Permission
+                            .locationWhenInUse.serviceStatus.isDisabled) {
+                          showLocationMessage(
+                              "Tolong aktifkan lokasi terlebih dahulu !");
                         } else {
-                          showMessage("Pastikan tidak ada yang kosong !",
-                              "Pilih Nama terlebih dahulu", true, true);
+                          if (nameController.text.isNotEmpty) {
+                            showMessage(
+                                "Apakah anda yakin?",
+                                "Absen masuk pada tanggal ${GeneralHelper().convertDateToString(dateTime: DateTime.now())}",
+                                true,
+                                false);
+                          } else {
+                            showMessage("Pastikan tidak ada yang kosong !",
+                                "Pilih Nama terlebih dahulu", true, true);
+                          }
                         }
+                      } else {
+                        showLocationMessage(
+                            "Anda terlalu jauh ${(radiusStore - radius).toInt()} Meter dari lokasi !");
                       }
+                   
                     },
                     withIcon: false,
                     active: true,
@@ -436,22 +478,36 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                     ),
                     title: "Keluar",
                     action: () async {
-                      if (await Permission
-                          .locationWhenInUse.serviceStatus.isDisabled) {
-                        showLocationMessage(
-                            "Tolong aktifkan lokasi terlebih dahulu !");
-                      } else {
-                        if (nameController.text.isNotEmpty) {
-                          showMessage(
-                            "Apakah anda yakin?",
-                            "Absen keluar pada tanggal ${GeneralHelper().convertDateToString(dateTime: DateTime.now())}",
-                            false,
-                            false,
-                          );
+                        
+                      cubit.checkRadiusStore();
+
+                      await cubit.stream
+                          .firstWhere((state) => state is HomeSpgLoaded);
+
+                      double? radius = cubit.radiusUser;
+                      double? radiusStore = double.parse(cubit.radiusStore!);
+
+                      if (radius! > radiusStore) {
+                        if (await Permission
+                            .locationWhenInUse.serviceStatus.isDisabled) {
+                          showLocationMessage(
+                              "Tolong aktifkan lokasi terlebih dahulu !");
                         } else {
-                          showMessage("Pastikan tidak ada yang kosong !",
-                              "Pilih Nama terlebih dahulu", true, true);
+                          if (nameController.text.isNotEmpty) {
+                            showMessage(
+                              "Apakah anda yakin?",
+                              "Absen keluar pada tanggal ${GeneralHelper().convertDateToString(dateTime: DateTime.now())}",
+                              false,
+                              false,
+                            );
+                          } else {
+                            showMessage("Pastikan tidak ada yang kosong !",
+                                "Pilih Nama terlebih dahulu", true, true);
+                          }
                         }
+                      } else {
+                        showLocationMessage(
+                            "Anda terlalu jauh ${(radiusStore - radius).toInt()} Meter dari lokasi !");
                       }
                     },
                     withIcon: false,
@@ -618,13 +674,8 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
   }
 
   Future<dynamic> showStoreList(
-    BuildContext context,
     HomeSpgCubit cubit,
   ) {
-    // variable like initState() or initCubit
-    // todo jump to value data
-
-    // todo show dropdown
     return showModalBottomSheet(
       context: context,
       enableDrag: false,
@@ -678,7 +729,7 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                   var fontWeight = FontWeight.w400;
                   var color = AppColors.transparent;
 
-                  if (nameController.text == nama) {
+                  if (nameController.text == nama.toString()) {
                     fontWeight = FontWeight.w500;
                     color = AppColors.shadeBlue;
                   }

@@ -1,18 +1,18 @@
-library general_helper;
+// library general_helper;
 
-import 'package:equatable/equatable.dart';
+// import 'package:equatable/equatable.dart';
 
-abstract class LocationServiceState extends Equatable {
-  const LocationServiceState();
+// abstract class LocationServiceState extends Equatable {
+//   const LocationServiceState();
 
-  @override
-  List<Object?> get props => [];
-}
+//   @override
+//   List<Object?> get props => [];
+// }
 
-class LocationServiceInitial extends LocationServiceState {}
+// class LocationServiceInitial extends LocationServiceState {}
 
-class LocationServiceLoading extends LocationServiceState {}
+// class LocationServiceLoading extends LocationServiceState {}
 
-class LocationServiceAvailable extends LocationServiceState {}
+// class LocationServiceAvailable extends LocationServiceState {}
 
-class LocationServiceUnavailable extends LocationServiceState {}
+// class LocationServiceUnavailable extends LocationServiceState {}

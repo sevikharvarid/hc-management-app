@@ -27,6 +27,24 @@ class HomeSpgRepository {
     }
   }
 
+  Future<DataResponse<String>> getRadiusStoreLocation(dynamic params) async {
+    try {
+      if (!await connectivityHelper.checkConnectivityStatus()) {
+        return const DataResponse.noConnection();
+      }
+
+      var response = await homeSpgProvider.getRadiusStoreLocation(params);
+
+      if (response!["responseCode"] == 200) {
+        return DataResponse.success(data: response["data"]["data"]);
+      } else {
+        return DataResponse.error(message: response['message'].toString());
+      }
+    } on RequestTimeoutException {
+      return const DataResponse.requestTimeOut();
+    }
+  }
+
   Future<DataResponse<String>> getListSPGName(dynamic params) async {
     try {
       if (!await connectivityHelper.checkConnectivityStatus()) {
