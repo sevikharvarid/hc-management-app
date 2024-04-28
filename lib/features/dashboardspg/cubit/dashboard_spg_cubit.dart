@@ -19,7 +19,7 @@ class DashboardSPGCubit extends Cubit<DashboardSPGState> {
     }
 
     if (index == 1) {
-      emit(DashboardSPGHome());
+      emit(DashboardSPGHistory());
     }
 
     if (index == 2) {

@@ -8,12 +8,14 @@ class AttendanceCardItem extends StatelessWidget {
   final String? attendanceDate;
   final String? startDayTime;
   final String? endDayTime;
+  final String? typeAbsence;
 
   const AttendanceCardItem({
     super.key,
     this.attendanceDate,
     this.startDayTime,
     this.endDayTime,
+    this.typeAbsence,
   });
 
   @override
@@ -54,14 +56,16 @@ class AttendanceCardItem extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.location_on,
-                    color: AppColors.redButton,
+                    color: typeAbsence == "in"
+                        ? AppColors.redButton
+                        : AppColors.blue70,
                     size: 50,
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Start Day",
+                        typeAbsence == "in" ? "Jam Masuk" : "Jam Keluar",
                         style: GoogleFonts.nunito(
                           color: AppColors.black,
                           fontSize: 14,
@@ -82,18 +86,19 @@ class AttendanceCardItem extends StatelessWidget {
               spaceWidth(width: SizeUtils.basePaddingMargin80),
               Row(
                 children: [
-                  Icon(
-                    Icons.location_on,
-                    color: AppColors.redButton,
-                    size: 50,
-                  ),
+                  // Icon(
+                  //   Icons.location_on,
+                  //   color: AppColors.redButton,
+                  //   size: 50,
+                  // ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "End Day",
+                        "Toko",
                         style: GoogleFonts.nunito(
                           color: AppColors.black,
+                          fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),
                       ),

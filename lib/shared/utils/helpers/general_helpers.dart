@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:geolocator/geolocator.dart';
 import 'package:hc_management_app/shared/utils/constant/app_constant.dart';
 import 'package:intl/intl.dart';
@@ -19,13 +17,6 @@ class GeneralHelper {
       currentPosition.latitude,
       currentPosition.longitude,
     );
-
-    log("asline : $formattedValue ");
-
-    log(" lat : $latitude");
-    log(" lng : $longitude");
-    log(" lat : ${currentPosition.latitude}");
-    log(" lng : ${currentPosition.longitude}");
     
     return radius;
   }

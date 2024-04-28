@@ -137,10 +137,15 @@ class _LoginPageState extends State<LoginPage> {
                   active: true,
                   margin: 20,
                   action: () async {
+                    if (password!.text.length < 8) {
+                      showMessage(context, "Password minimal 8 Karakter");
+                    } else {
                     cubit.postLogin(
                         nik: nik!.text,
                         password: password!.text,
                       );
+
+                    }
                     // if (await Permission
                     //     .locationWhenInUse.serviceStatus.isDisabled) {
                     //   showMessage(

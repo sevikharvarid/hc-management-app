@@ -1,8 +1,8 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hc_management_app/features/dashboardspg/cubit/dashboard_spg_cubit.dart';
+import 'package:hc_management_app/features/history/bloc/history_spg_cubit.dart';
+import 'package:hc_management_app/features/history/ui/history_spg_page.dart';
 import 'package:hc_management_app/features/homespg/cubit/home_spg_cubit.dart';
 import 'package:hc_management_app/features/homespg/ui/home_spg_page.dart';
 import 'package:hc_management_app/features/profile/profile_spg/cubit/profile_spg_cubit.dart';
@@ -33,9 +33,15 @@ class _DashboardSPGPageState extends State<DashboardSPGPage> {
                 child: const HomeSpgPage(),
               );
             }
+
+          if (state is DashboardSPGHistory) {
+            return BlocProvider<HistorySPGCubit>(
+              create: (context) => HistorySPGCubit()..initCubit(),
+              child: const HistorySPGPage(),
+            );
+          }
       
-            if (state is DashboardSPGProfile) {
-              log("tes");
+          if (state is DashboardSPGProfile) {
               return BlocProvider<ProfileSPGCubit>(
                 create: (context) => ProfileSPGCubit()..initCubit(),
                 child: const ProfileSPGPage(),

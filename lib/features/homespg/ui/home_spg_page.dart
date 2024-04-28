@@ -444,7 +444,7 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                       double? radius = cubit.radiusUser;
                       double? radiusStore = double.parse(cubit.radiusStore!);
 
-                      if (radius! > radiusStore) {
+                      if (radius! < radiusStore) {
                         if (await Permission
                             .locationWhenInUse.serviceStatus.isDisabled) {
                           showLocationMessage(
@@ -487,7 +487,7 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                       double? radius = cubit.radiusUser;
                       double? radiusStore = double.parse(cubit.radiusStore!);
 
-                      if (radius! > radiusStore) {
+                      if (radius! < radiusStore) {
                         if (await Permission
                             .locationWhenInUse.serviceStatus.isDisabled) {
                           showLocationMessage(
@@ -526,7 +526,7 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
   showLocationMessage(String? message) {
     return CustomBottomSheet().showCustomBottomSheet(
       context: context,
-      title: "Terjadi Kesalahan Login!",
+      title: "Terjadi Kesalahan",
       titleIcon: "assets/icons/ic_caution_red.svg",
       bodyContent: Column(
         mainAxisSize: MainAxisSize.min,
@@ -640,7 +640,7 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                 Container(
                   padding: const EdgeInsets.all(SizeUtils.basePaddingMargin16),
                   child: CustomButton(
-                    buttonWidth: MediaQuery.of(context).size.width / 2.5,
+                    buttonWidth: MediaQuery.of(context).size.width / 3,
                     title: "Batalkan",
                     action: () => Navigator.pop(context),
                     withIcon: false,
@@ -655,7 +655,7 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                 Container(
                   padding: const EdgeInsets.all(SizeUtils.basePaddingMargin16),
                   child: CustomButton(
-                    buttonWidth: MediaQuery.of(context).size.width / 2.5,
+                    buttonWidth: MediaQuery.of(context).size.width / 3,
                     title: "Ya, Lanjutkan",
                     action: () {
                       Navigator.pop(context);
