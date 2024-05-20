@@ -137,8 +137,7 @@ class CheckInCubit extends Cubit<CheckInState> {
     var userId = await preferences.read(PreferencesKey.userId);
 
     var params = userId;
-    log("USER ID : $params");
-
+    
     final response = await checkInRepository.getStoreData(params);
     final List<dynamic> responseData = response.data['data'];
 
