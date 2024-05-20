@@ -1,134 +1,37 @@
 import 'dart:convert';
 
-ListSpg listSpgFromJson(String str) => ListSpg.fromJson(json.decode(str));
 
-String listSpgToJson(ListSpg data) => json.encode(data.toJson());
+DataSpg dataSpgFromJson(String str) => DataSpg.fromJson(json.decode(str));
 
-class ListSpg {
-  bool success;
-  String message;
-  DataSPG data;
+String dataSpgToJson(DataSpg data) => json.encode(data.toJson());
 
-  ListSpg({
-    required this.success,
-    required this.message,
-    required this.data,
-  });
-
-  factory ListSpg.fromJson(Map<String, dynamic> json) => ListSpg(
-        success: json["success"],
-        message: json["message"],
-        data: DataSPG.fromJson(json["data"]),
-      );
-
-  Map<String, dynamic> toJson() => {
-        "success": success,
-        "message": message,
-        "data": data.toJson(),
-      };
-}
-
-class DataSPG {
-  int currentPage;
-  List<DataListSPG> data;
-  String firstPageUrl;
-  int from;
-  int lastPage;
-  String lastPageUrl;
-  List<Link> links;
-  dynamic nextPageUrl;
-  String path;
-  int perPage;
-  dynamic prevPageUrl;
-  int to;
-  int total;
-
-  DataSPG({
-    required this.currentPage,
-    required this.data,
-    required this.firstPageUrl,
-    required this.from,
-    required this.lastPage,
-    required this.lastPageUrl,
-    required this.links,
-    required this.nextPageUrl,
-    required this.path,
-    required this.perPage,
-    required this.prevPageUrl,
-    required this.to,
-    required this.total,
-  });
-
-  factory DataSPG.fromJson(Map<String, dynamic> json) => DataSPG(
-        currentPage: json["current_page"],
-        data: List<DataListSPG>.from(
-            json["data"].map((x) => DataListSPG.fromJson(x))),
-        firstPageUrl: json["first_page_url"],
-        from: json["from"],
-        lastPage: json["last_page"],
-        lastPageUrl: json["last_page_url"],
-        links: List<Link>.from(json["links"].map((x) => Link.fromJson(x))),
-        nextPageUrl: json["next_page_url"],
-        path: json["path"],
-        perPage: json["per_page"],
-        prevPageUrl: json["prev_page_url"],
-        to: json["to"],
-        total: json["total"],
-      );
-
-  Map<String, dynamic> toJson() => {
-        "current_page": currentPage,
-        "data": List<dynamic>.from(data.map((x) => x.toJson())),
-        "first_page_url": firstPageUrl,
-        "from": from,
-        "last_page": lastPage,
-        "last_page_url": lastPageUrl,
-        "links": List<dynamic>.from(links.map((x) => x.toJson())),
-        "next_page_url": nextPageUrl,
-        "path": path,
-        "per_page": perPage,
-        "prev_page_url": prevPageUrl,
-        "to": to,
-        "total": total,
-      };
-}
-
-class DataListSPG {
+class DataSpg {
   int id;
-  String name;
-  String email;
-  dynamic emailVerifiedAt;
-  String nik;
-  String type;
-  String? role;
-  String createdBy;
+  int spvId;
+  String spvName;
+  int userId;
+  String userName;
   dynamic deletedAt;
   DateTime createdAt;
   DateTime updatedAt;
 
-  DataListSPG({
+  DataSpg({
     required this.id,
-    required this.name,
-    required this.email,
-    required this.emailVerifiedAt,
-    required this.nik,
-    required this.type,
-    required this.role,
-    required this.createdBy,
+    required this.spvId,
+    required this.spvName,
+    required this.userId,
+    required this.userName,
     required this.deletedAt,
     required this.createdAt,
     required this.updatedAt,
   });
 
-  factory DataListSPG.fromJson(Map<String, dynamic> json) => DataListSPG(
+  factory DataSpg.fromJson(Map<String, dynamic> json) => DataSpg(
         id: json["id"],
-        name: json["name"],
-        email: json["email"],
-        emailVerifiedAt: json["email_verified_at"],
-        nik: json["nik"],
-        type: json["type"],
-        role: json["role"],
-        createdBy: json["created_by"],
+        spvId: json["spv_id"],
+        spvName: json["spv_name"],
+        userId: json["user_id"],
+        userName: json["user_name"],
         deletedAt: json["deleted_at"],
         createdAt: DateTime.parse(json["created_at"]),
         updatedAt: DateTime.parse(json["updated_at"]),
@@ -136,13 +39,10 @@ class DataListSPG {
 
   Map<String, dynamic> toJson() => {
         "id": id,
-        "name": name,
-        "email": email,
-        "email_verified_at": emailVerifiedAt,
-        "nik": nik,
-        "type": type,
-        "role": role,
-        "created_by": createdBy,
+        "spv_id": spvId,
+        "spv_name": spvName,
+        "user_id": userId,
+        "user_name": userName,
         "deleted_at": deletedAt,
         "created_at": createdAt.toIso8601String(),
         "updated_at": updatedAt.toIso8601String(),

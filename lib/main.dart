@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:hc_management_app/config/app.dart';
 import 'package:hc_management_app/features/face_recognition/services/locator/locator.dart';
 import 'package:hc_management_app/shared/utils/constant/app_colors.dart';
+import 'package:hc_management_app/shared/utils/helpers/network_debugger.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -13,13 +14,11 @@ Future<void> main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
 
+  NetworkDebugger().startNetworkDebugger();
+  
   // Minta izin akses lokasi
   await requestLocationPermission();
 
-  // // Inisialisasi layanan latar belakang jika izin diberikan
-  // if (await Permission.location.isGranted) {
-  //   await BackgroundService.instance.init();
-  // }
 
   initializeDateFormatting('id_ID');
 

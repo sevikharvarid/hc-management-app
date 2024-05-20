@@ -6,7 +6,7 @@ import 'package:hc_management_app/shared/utils/constant/app_colors.dart';
 import 'package:hc_management_app/shared/utils/constant/size_utils.dart';
 import 'package:hc_management_app/shared/widgets/alert/custom_bottom_sheet.dart';
 import 'package:hc_management_app/shared/widgets/atom/spacer.dart';
-import 'package:hc_management_app/shared/widgets/card/attendance_card_item.dart';
+import 'package:hc_management_app/shared/widgets/card/visit_cart_item.dart';
 import 'package:hc_management_app/shared/widgets/custom_widget/input_month_filter.dart';
 
 class RequestSalesPage extends StatefulWidget {
@@ -34,6 +34,7 @@ class _RequestSalesPageState extends State<RequestSalesPage> {
               "Request",
               style: GoogleFonts.nunito(
                 fontWeight: FontWeight.w400,
+                color: AppColors.white,
                 fontSize: 20,
               ),
             ),
@@ -94,12 +95,19 @@ class _RequestSalesPageState extends State<RequestSalesPage> {
                           const SizedBox(height: SizeUtils.basePaddingMargin2),
                       itemBuilder: (context, index) {
                         return GestureDetector(
-                            onTap: () {},
-                            child: const AttendanceCardItem(
-                              attendanceDate: "Wed, 17 Jan 2024",
-                              startDayTime: "08:59",
-                              endDayTime: "18:00",
-                            ));
+                          onTap: () {},
+                          child: const VisitCardItem(
+                            attendanceDate: "Wed, 17 Jan 2024",
+                            startDateTime: "08:59",
+                            endDateTime: "10:20",
+                            typeAbsence: "in",
+                            spgName: "Wahyu",
+                            storeName: "Toko sejahtera Abadi",
+                            storeCode: "KD01",
+                            soNumber: "S0XXXXX9",
+                            // endDayTime: "18:00",
+                          ),
+                        );
                       },
                     ),
                   ],

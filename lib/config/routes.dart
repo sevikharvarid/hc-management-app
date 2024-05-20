@@ -9,4 +9,7 @@ class Routes {
   static const String requestSPG = "/request-spg";
   static const String profileSales = "/profile-sales";
   static const String profileSPG = "/profile-spg";
+
+  //
+  static const String checkoutSales = "/checkout-sales";
 }

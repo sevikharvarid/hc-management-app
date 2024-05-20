@@ -13,3 +13,13 @@ class HistorySPGLoaded extends HistorySPGState {
   @override
   List<Object?> get props => [];
 }
+
+
+class HistoryChangeState extends HistorySPGState {
+  final bool? state;
+
+  const HistoryChangeState({this.state});
+
+  @override
+  List<Object?> get props => [state];
+}

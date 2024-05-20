@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hc_management_app/config/routes.dart';
 import 'package:hc_management_app/features/login/cubit/login_cubit.dart';
@@ -27,7 +28,10 @@ class _LoginPageState extends State<LoginPage> {
     return BlocConsumer<LoginCubit, LoginState>(
       listener: (context, state) {
         if (state is LoginLoading) {
-          showProgressDialog(context: context);
+          showProgressDialog(
+            context: context,
+            isDismissible: true,
+          );
         }
 
         if (state is LoginLoaded) {
@@ -56,119 +60,110 @@ class _LoginPageState extends State<LoginPage> {
       builder: (context, state) {
         return Scaffold(
           body: SingleChildScrollView(
-            child: Column(
+            child: Stack(
               children: [
-                spaceHeight(
-                  height: 20,
-                ),
-                Image.asset(
-                  "assets/images/img_login.png",
-                  width: 300,
-                  height: 300,
-                ),
-                spaceHeight(
-                  height: 20,
-                ),
                 Container(
-                  margin: const EdgeInsets.symmetric(
-                      horizontal: SizeUtils.basePaddingMargin24),
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    "Welcome To\nHC Management App",
-                    textAlign: TextAlign.left,
-                    style: GoogleFonts.nunito(
-                        fontSize: 22,
-                        color: AppColors.black80,
-                        fontWeight: FontWeight.w400),
+                  margin: EdgeInsets.zero,
+                  child: Image.asset(
+                    // "assets/images/splash_screen_background.png",
+                    "assets/images/login_background.png",
+                    height: MediaQuery.of(context).size.height,
+                    width: MediaQuery.of(context).size.width,
+                    fit: BoxFit.fill,
                   ),
                 ),
-                Container(
-                  margin: const EdgeInsets.symmetric(
-                      horizontal: SizeUtils.basePaddingMargin24),
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    "Login",
-                    textAlign: TextAlign.left,
-                    style: GoogleFonts.nunito(
-                        fontSize: 22,
-                        color: AppColors.black80,
-                        fontWeight: FontWeight.w700),
-                  ),
-                ),
-                spaceHeight(
-                  height: 20,
-                ),
-                Container(
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  child: buildTextField(
-                    controller: nik,
-                    hintText: "Masukkan NIK",
-                    label: "NIK",
-                  ),
-                ),
-                spaceHeight(
-                  height: 20,
-                ),
-                Container(
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  child: buildTextField(
-                    controller: password,
-                    hintText: "Masukkan Password",
-                    label: "Password",
-                    suffixIcon: IconButton(
-                      onPressed: () => cubit.setVisibile(),
-                      icon: Icon(
-                        cubit.isVisible!
-                            ? Icons.visibility_off
-                            : Icons.visibility,
+                Column(
+                  children: [
+                    spaceHeight(
+                      height: 20,
+                    ),
+                    Image.asset(
+                      "assets/images/ic_launcher_round.png",
+                      width: 300,
+                      height: 300,
+                    ),
+                    spaceHeight(
+                      height: 45.h,
+                    ),
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: SizeUtils.basePaddingMargin24),
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        "Welcome To\nS7win App",
+                        textAlign: TextAlign.left,
+                        style: GoogleFonts.nunito(
+                            fontSize: 22,
+                            color: AppColors.black80,
+                            fontWeight: FontWeight.w400),
                       ),
                     ),
-                    obscureText: !cubit.isVisible!,
-                  ),
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: SizeUtils.basePaddingMargin24),
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        "Login",
+                        textAlign: TextAlign.left,
+                        style: GoogleFonts.nunito(
+                            fontSize: 22,
+                            color: AppColors.black80,
+                            fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    spaceHeight(height: 40.h),
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 8),
+                      child: buildTextField(
+                        controller: nik,
+                        hintText: "Masukkan NIK",
+                        label: "NIK",
+                      ),
+                    ),
+                    spaceHeight(
+                      height: 10.h,
+                    ),
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 8),
+                      child: buildTextField(
+                        controller: password,
+                        hintText: "Masukkan Password",
+                        label: "Password",
+                        suffixIcon: IconButton(
+                          onPressed: () => cubit.setVisibile(),
+                          icon: Icon(
+                            cubit.isVisible!
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                        ),
+                        obscureText: !cubit.isVisible!,
+                      ),
+                    ),
+                    spaceHeight(
+                      height: 20.h,
+                    ),
+                    CustomButton(
+                      title: "Login",
+                      withIcon: false,
+                      active: true,
+                      margin: 20,
+                      action: () async {
+                        if (password!.text.length < 8) {
+                          showMessage(context, "Password minimal 8 Karakter");
+                        } else {
+                          cubit.postLogin(
+                            nik: nik!.text,
+                            password: password!.text,
+                          );
+                        }
+                      },
+                    ),
+                  ],
                 ),
-                spaceHeight(
-                  height: 30,
-                ),
-                CustomButton(
-                  title: "Login",
-                  withIcon: false,
-                  active: true,
-                  margin: 20,
-                  action: () async {
-                    if (password!.text.length < 8) {
-                      showMessage(context, "Password minimal 8 Karakter");
-                    } else {
-                    cubit.postLogin(
-                        nik: nik!.text,
-                        password: password!.text,
-                      );
-
-                    }
-                    // if (await Permission
-                    //     .locationWhenInUse.serviceStatus.isDisabled) {
-                    //   showMessage(
-                    //       context, "Tolong aktifkan lokasi terlebih dahulu !");
-                    // } else {
-                    //   cubit.postLogin(
-                    //     nik: nik!.text,
-                    //     password: password!.text,
-                    //   );
-                    // }
-                  },
-                ),
-                spaceHeight(
-                  height: 20,
-                ),
-                // Text(
-                //   "Forgot Password?",
-                //   textAlign: TextAlign.center,
-                //   style: GoogleFonts.nunito(
-                //       fontSize: 14,
-                //       color: AppColors.black80,
-                //       fontWeight: FontWeight.w700),
-                // ),
+                
               ],
             ),
           ),

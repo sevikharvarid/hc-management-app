@@ -1,20 +1,18 @@
-import 'dart:developer';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hc_management_app/config/routes.dart';
 import 'package:hc_management_app/domain/model/stores.dart';
 import 'package:hc_management_app/features/check_in/cubit/check_in_cubit.dart';
-import 'package:hc_management_app/features/face_recognition/ui/face_recognition_page.dart';
 import 'package:hc_management_app/shared/utils/constant/app_colors.dart';
 import 'package:hc_management_app/shared/utils/constant/size_utils.dart';
+import 'package:hc_management_app/shared/widgets/alert/progress_dialog.dart';
 import 'package:hc_management_app/shared/widgets/atom/spacer.dart';
 import 'package:hc_management_app/shared/widgets/button/custom_button.dart';
 import 'package:hc_management_app/shared/widgets/custom_widget/custom_loading.dart';
-import 'package:hc_management_app/shared/widgets/dropdown/custom_dropdown_menu.dart';
 import 'package:hc_management_app/shared/widgets/dropdown/dropdown_with_search.dart';
+import 'package:hc_management_app/shared/widgets/image/image_widget/image_picker/widget/image_picker_widget.dart';
 import 'package:hc_management_app/shared/widgets/text_field/custom_text_field.dart';
 import 'package:hc_management_app/shared/widgets/text_field/input_text_field_default.dart';
 
@@ -26,7 +24,7 @@ class CheckInPage extends StatefulWidget {
 }
 
 class _CheckInPageState extends State<CheckInPage> {
-  TextEditingController namaSales = TextEditingController();
+  TextEditingController namaToko = TextEditingController();
   TextEditingController nikSales = TextEditingController();
   TextEditingController noteSales = TextEditingController();
   TextEditingController storeController = TextEditingController();
@@ -35,9 +33,22 @@ class _CheckInPageState extends State<CheckInPage> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => CheckInCubit()..initCubit(),
+      create: (context) => CheckInCubit(),
       child: BlocConsumer<CheckInCubit, CheckInState>(
-        listener: (context, state) {},
+        listener: (context, state) {
+          if (state is CheckInLoading) {
+            showProgressDialog(
+              context: context,
+              isDismissible: true,
+            );
+          }
+
+          if (state is CheckInLoaded) {
+            Navigator.pop(context);
+            Navigator.pushNamedAndRemoveUntil(
+                context, Routes.mainSales, (route) => false);
+          }
+        },
         builder: (context, state) {
           final cubit = context.read<CheckInCubit>();
           return Scaffold(
@@ -47,7 +58,15 @@ class _CheckInPageState extends State<CheckInPage> {
                 "Check In",
                 style: GoogleFonts.nunito(
                   fontWeight: FontWeight.w400,
+                  color: AppColors.white,
                   fontSize: 20,
+                ),
+              ),
+              leading: IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: Icon(
+                  Icons.arrow_back_ios,
+                  color: AppColors.white,
                 ),
               ),
             ),
@@ -86,16 +105,19 @@ class _CheckInPageState extends State<CheckInPage> {
                             ],
                           ),
                         ),
-                        Expanded(
-                          child: DropdownWithSearchWidget(
-                            width: MediaQuery.of(context).size.width,
-                            height: SizeUtils.baseWidthHeight48,
-                            searchController: storeController,
-                            textHint: "Pilih Toko",
-                            bottomSheetLabel: "Pilih Toko",
-                            onTap: () {
-                              showStoreList(context, cubit);
-                            },
+                        Visibility(
+                          visible: !cubit.isChecked,
+                          child: Expanded(
+                            child: DropdownWithSearchWidget(
+                              width: MediaQuery.of(context).size.width,
+                              height: SizeUtils.baseWidthHeight48,
+                              searchController: storeController,
+                              textHint: "Pilih Toko",
+                              bottomSheetLabel: "Pilih Toko",
+                              onTap: () {
+                                showStoreList(context, cubit);
+                              },
+                            ),
                           ),
                         )
                       ],
@@ -105,46 +127,46 @@ class _CheckInPageState extends State<CheckInPage> {
                     margin:
                         const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                     child: buildTextField(
-                      isReadOnly: cubit.isReadOnlyStore,
-                      controller: namaSales,
-                      hintText: "Masukkan Nama",
-                      label: "Nama",
+                      isReadOnly: !cubit.isReadOnlyStore,
+                      controller: namaToko,
+                      hintText: "Masukkan Nama Toko",
+                      label: "Nama Toko",
                     ),
                   ),
-                  Container(
-                    margin: const EdgeInsets.only(
-                        left: 16, top: 12, bottom: 12, right: 24),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: Container(
-                            padding: const EdgeInsets.only(
-                                left: 8, top: 8, bottom: 8, right: 16),
-                            child: CustomDropdownMenu(
-                              labelText: "Pilihan Absen",
-                              options: const [
-                                "Kunjungan",
-                                "Terima tagihan",
-                                "Tukar faktur",
-                              ],
-                              onChanged: (String newValue) {
-                                log('Selected option: $newValue');
-                              },
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: buildTextField(
-                            controller: nikSales,
-                            hintText: "Masukkan Nik",
-                            label: "NIK",
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
+                  // Container(
+                  //   margin: const EdgeInsets.only(
+                  //       left: 16, top: 12, bottom: 12, right: 24),
+                  //   child: Row(
+                  //     children: [
+                  //       Expanded(
+                  //         flex: 3,
+                  //         child: Container(
+                  //           padding: const EdgeInsets.only(
+                  //               left: 8, top: 8, bottom: 8, right: 16),
+                  //           child: CustomDropdownMenu(
+                  //             labelText: "Pilihan Absen",
+                  //             options: const [
+                  //               "Kunjungan",
+                  //               "Terima tagihan",
+                  //               "Tukar faktur",
+                  //             ],
+                  //             onChanged: (String newValue) {
+                  //               log('Selected option: $newValue');
+                  //             },
+                  //           ),
+                  //         ),
+                  //       ),
+                  //       Expanded(
+                  //         flex: 2,
+                  //         child: buildTextField(
+                  //           controller: nikSales,
+                  //           hintText: "Masukkan Nik",
+                  //           label: "NIK",
+                  //         ),
+                  //       )
+                  //     ],
+                  //   ),
+                  // ),
                   Container(
                     margin:
                         const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
@@ -156,6 +178,29 @@ class _CheckInPageState extends State<CheckInPage> {
                     ),
                   ),
                   Container(
+                    margin: const EdgeInsets.only(
+                      left: SizeUtils.basePaddingMargin24,
+                      right: SizeUtils.basePaddingMargin24,
+                      bottom: SizeUtils.basePaddingMargin16,
+                      top: SizeUtils.basePaddingMargin10,
+                    ),
+                    child: ImagePickerWidget(
+                      width: SizeUtils.baseWidthHeight100,
+                      height: SizeUtils.baseWidthHeight100,
+                      label: "Upload Gambar",
+                      accessibilityId: "Ac",
+                      imageName: "Image Gambar",
+                      mandatory: true,
+                      minimumImage: 1,
+                      maximumImage: 1,
+                      imagePickerType: ImagePickerTypeEnum.single,
+                      pickedImage: const [],
+                      onImageChanged: (value) {
+                        cubit.saveImage(value);
+                      },
+                    ),
+                  ),
+                  Container(
                     margin:
                         const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                     child: CustomButton(
@@ -163,18 +208,14 @@ class _CheckInPageState extends State<CheckInPage> {
                       backgroundColor: MaterialStateProperty.all(
                         AppColors.purple,
                       ),
-                      title: "Ambil Foto",
+                      title: "Kirim Data",
                       action: () async {
-                        var resultFR = await Navigator.push(
-                          context,
-                          CupertinoPageRoute(
-                              builder: (context) => const TakePicture()),
+                        cubit.postData(
+                          notes: noteSales.text,
+                          storeName: namaToko.text,
+                          storeCode: storeController.text,
                         );
-                        log("tes ImagePath ? $resultFR");
-
-                        if (resultFR != null) {
-                          cubit.postData(resultFR);
-                        }
+                      
                       },
                       withIcon: false,
                       active: true,
@@ -267,7 +308,7 @@ class _CheckInPageState extends State<CheckInPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            toko.name,
+                            "${toko.code} - ${toko.name}",
                             style: GoogleFonts.nunito(
                               fontWeight: fontWeight,
                             ),
@@ -277,7 +318,8 @@ class _CheckInPageState extends State<CheckInPage> {
                     ),
                     onTap: () {
                       FocusScope.of(context).unfocus();
-                      storeController.text = toko.name;
+                      storeController.text = toko.code;
+                      namaToko.text = toko.name;
                       cubit.dataStore = toko;
 
                       searchController.clear();

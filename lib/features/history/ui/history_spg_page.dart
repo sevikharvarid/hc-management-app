@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hc_management_app/features/history/bloc/history_spg_cubit.dart';
 import 'package:hc_management_app/features/history/bloc/history_spg_state.dart';
 import 'package:hc_management_app/shared/utils/constant/app_colors.dart';
 import 'package:hc_management_app/shared/utils/constant/size_utils.dart';
-import 'package:hc_management_app/shared/widgets/alert/custom_bottom_sheet.dart';
 import 'package:hc_management_app/shared/widgets/alert/progress_dialog.dart';
 import 'package:hc_management_app/shared/widgets/atom/spacer.dart';
 import 'package:hc_management_app/shared/widgets/card/attendance_card_item.dart';
-import 'package:hc_management_app/shared/widgets/custom_widget/input_month_filter.dart';
+import 'package:hc_management_app/shared/widgets/custom_widget/custom_widget.dart';
+import 'package:hc_management_app/shared/widgets/date_field/input_date_field.dart';
+import 'package:hc_management_app/shared/widgets/image/image_lottie.dart';
+import 'package:hc_management_app/shared/widgets/text_field/custom_text_field.dart';
+import 'package:intl/intl.dart';
 
 class HistorySPGPage extends StatefulWidget {
   const HistorySPGPage({super.key});
@@ -19,8 +23,7 @@ class HistorySPGPage extends StatefulWidget {
 }
 
 class _HistorySPGPageState extends State<HistorySPGPage> {
-  TextEditingController requestTypeController = TextEditingController();
-  TextEditingController monthController = TextEditingController();
+ 
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<HistorySPGCubit>();
@@ -50,53 +53,99 @@ class _HistorySPGPageState extends State<HistorySPGPage> {
               ),
             ),
           ),
-          body: CustomScrollView(
-            slivers: [
-              SliverAppBar(
-                backgroundColor: AppColors.white,
-                elevation: 0,
-                automaticallyImplyLeading: false,
-                floating: true,
-                pinned: true,
-                centerTitle: false,
-                leading: null,
-                title: Container(
-                  height: kToolbarHeight,
-                  width: MediaQuery.of(context).size.width,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 12,
-                  ),
-                  child: ListView(
-                    shrinkWrap: true,
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      // GestureDetector(
-                      //     onTap: () {},
-                      //     child: cardFilter(title: "Filter", filterType: true)),
-                      InputMonthField(
-                        bottomSheetLabel: "Pilih Tanggal",
-                        controller: monthController,
-                        onSelected: (value) {},
-                      ),
-                      spaceWidth(width: 8),
-                      GestureDetector(
-                          onTap: () {
-                            CustomBottomSheet().openRequestTypePicker(
-                              context,
-                              "Request Type",
-                              requestTypeController,
-                              ["Awaiting", "Pending", "Cancelled", "Approved"],
-                            ).then((value) {});
+          body: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: 200, // Atur tinggi sesuai kebutuhan
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        InputDateField(
+                          margin: const EdgeInsets.symmetric(
+                            vertical: 2,
+                          ),
+                          accessibilityId: "",
+                          isDateRange: false,
+                          controller: cubit.dateStart,
+                          hint: "Tanggal awal",
+                          label: "Tanggal Awal",
+                          bottomSheetLabel: "Pilih tanggal",
+                          firstDate: DateTime.now()
+                              .subtract(const Duration(days: 1825)),
+                          onSelected: (_) {
+                            cubit.changeState();
                           },
-                          child: cardFilter(
-                              title: "Request Type", isDropdown: true)),
-                    ],
-                  ),
+                        ),
+                        InputDateField(
+                          isActive: cubit.stateDateEnd!,
+                          margin: const EdgeInsets.symmetric(
+                            vertical: 2,
+                          ),
+                          accessibilityId: "",
+                          isDateRange: false,
+                          controller: cubit.dateEnd,
+                          hint: "Tanggal akhir",
+                          label: "Tanggal Akhir",
+                          bottomSheetLabel: "Pilih tanggal",
+                          firstDate: cubit.dateStart.text.isNotEmpty
+                              ? DateFormat('dd MMMM yyyy', 'id_ID')
+                                  .parse(cubit.dateStart.text)
+                              : DateTime.now(),
+                          lastDate: cubit.dateStart.text.isNotEmpty
+                              ? DateFormat('dd MMMM yyyy', 'id_ID')
+                                  .parse(cubit.dateStart.text)
+                                  .add(const Duration(days: 31))
+                              : DateTime.now(),
+                          onSelected: (_) {
+                            cubit.saveMonth();
+                          },
+                        ),
+                      ],
+                    ),
+                   
+                    customHorizontalDivider(),
+                    Container(
+                      margin:
+                          EdgeInsets.symmetric(horizontal: 20.w, vertical: 2.h),
+                      child: buildTextField(
+                        suffixIcon: const Icon(Icons.search),
+                        controller: cubit.searchController,
+                        label: "",
+                        hintText: "Cari nama karyawan",
+                        onFieldSubmitted: (value) {
+                          cubit.findSPG(value);
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              SliverList(
-                delegate: SliverChildListDelegate(
-                  [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: cubit.absenceList.isEmpty
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const ImageLottie(
+                              lottiePath: "assets/jsons/empty_data.json",
+                              width: SizeUtils.baseWidthHeight214,
+                              height: SizeUtils.baseWidthHeight214,
+                            ),
+                            Text(
+                              "Data tidak di temukan",
+                              style: GoogleFonts.nunito(
+                                fontWeight: FontWeight.w400,
+                                color: AppColors.black,
+                                fontSize: 20,
+                              ),
+                            ),
+                          ],
+                        )
+                      :
                     ListView.separated(
                       padding: const EdgeInsets.only(top: 4, bottom: 20),
                       physics: const NeverScrollableScrollPhysics(),
@@ -107,8 +156,13 @@ class _HistorySPGPageState extends State<HistorySPGPage> {
                       itemBuilder: (context, index) {
                         var data = cubit.absenceList[index];
                         return GestureDetector(
-                            onTap: () {},
+                                onTap: () => showDetailImage(
+                                      context: context,
+                                      imageUrl:
+                                          "http://103.140.34.220:280/storage/storage/${data.image}",
+                                    ),
                             child: AttendanceCardItem(
+                                  spgName: data.spgName,
                               attendanceDate:
                                   cubit.generalHelper.convertDateToString(
                                 dateTime: cubit.absenceList[index].date,
@@ -116,15 +170,139 @@ class _HistorySPGPageState extends State<HistorySPGPage> {
                               ),
                               typeAbsence: data.type,
                               startDayTime: data.time,
-                              endDayTime: data.storeName,
+                                  storeName: data.storeName,
                             ));
                       },
-                    ),
-                  ],
+                        ),
                 ),
               )
             ],
           ),
+          // body: CustomScrollView(
+          //   slivers: [
+          //     SliverAppBar(
+          //       backgroundColor: AppColors.white,
+          //       elevation: 0,
+          //       automaticallyImplyLeading: false,
+          //       floating: true,
+          //       pinned: true,
+          //       centerTitle: false,
+          //       leading: null,
+
+          //       flexibleSpace: FlexibleSpaceBar(
+          //         background: Container(
+          //           height: 200,
+          //           padding:
+          //               const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          //           color: Colors.red,
+          //           child: Column(
+          //             children: [
+          //               InputDateField(
+          //                 margin: const EdgeInsets.symmetric(
+          //                     vertical: 8, horizontal: 16),
+          //                 accessibilityId: "",
+          //                 controller: dateStart,
+          //                 hint: "Pilih Tanggal",
+          //                 label: "Tanggal Mulai",
+          //                 bottomSheetLabel: "Pilih Tanggal",
+          //                 isDateRange: false,
+          //                 firstDate: DateTime.now(),
+          //                 onSelected: (_) {
+          //                   // if (bloc.startDate !=
+          //                   //     bloc.generalHelper.convertStringToDate(
+          //                   //         stringDate:
+          //                   //             startDateEditingController.text)) {
+          //                   //   endDateEditingController.clear();
+          //                   // }
+          //                   // bloc.validateForm(
+          //                   //   startDateEditingController.text,
+          //                   //   endDateEditingController.text,
+          //                   //   reasonEditingController.text,
+          //                   // );
+          //                 },
+          //               ),
+
+          //               // Submission absence end date
+          //               // InputDateField(
+          //               //     margin: const EdgeInsets.symmetric(
+          //               //         vertical: 8, horizontal: 16),
+          //               //     accessibilityId: "",
+          //               //     isDateRange: false,
+          //               //     controller: dateEnd,
+          //               //     hint: "Pilih tanggal",
+          //               //     label: "Tanggal Akhir",
+          //               //     bottomSheetLabel: "Pilih tanggal",
+          //               //     firstDate: DateTime.now(),
+          //               //     onSelected: (_) {
+          //               //       // bloc.validateForm(
+          //               //       //   startDateEditingController.text,
+          //               //       //   endDateEditingController.text,
+          //               //       //   reasonEditingController.text,
+          //               //       // );
+          //               //     }),
+          //             ],
+          //           ),
+          //         ),
+          //       ),
+          //     ),
+
+          //     SliverList(
+          //       delegate: SliverChildListDelegate(
+          //         [
+
+          //           cubit.absenceList.isEmpty
+          //               ? Column(
+          //                   mainAxisAlignment: MainAxisAlignment.center,
+          //                   children: [
+          //                     const ImageLottie(
+          //                       lottiePath: "assets/jsons/empty_data.json",
+          //                       width: SizeUtils.baseWidthHeight214,
+          //                       height: SizeUtils.baseWidthHeight214,
+          //                     ),
+          //                     Text(
+          //                       "Data tidak di temukan",
+          //                       style: GoogleFonts.nunito(
+          //                         fontWeight: FontWeight.w400,
+          //                         color: AppColors.black,
+          //                         fontSize: 20,
+          //                       ),
+          //                     ),
+          //                   ],
+          //                 )
+          //               :
+          //           ListView.separated(
+          //             padding: const EdgeInsets.only(top: 4, bottom: 20),
+          //             physics: const NeverScrollableScrollPhysics(),
+          //             shrinkWrap: true,
+          //             itemCount: cubit.absenceList.length,
+          //             separatorBuilder: (context, index) =>
+          //                 const SizedBox(height: SizeUtils.basePaddingMargin2),
+          //             itemBuilder: (context, index) {
+          //               var data = cubit.absenceList[index];
+          //               return GestureDetector(
+          //                         onTap: () => showDetailImage(
+          //                               context: context,
+          //                               imageUrl:
+          //                                   "http://103.140.34.220:280/storage/storage/${data.image}",
+          //                             ),
+          //                   child: AttendanceCardItem(
+          //                           spgName: data.spgName,
+          //                     attendanceDate:
+          //                         cubit.generalHelper.convertDateToString(
+          //                       dateTime: cubit.absenceList[index].date,
+          //                       dateFormat: "E, dd MMM yyyy",
+          //                     ),
+          //                     typeAbsence: data.type,
+          //                     startDayTime: data.time,
+          //                           storeName: data.storeName,
+          //                   ));
+          //             },
+          //           ),
+          //         ],
+          //       ),
+          //     )
+          //   ],
+          // ),
         );
       },
     );

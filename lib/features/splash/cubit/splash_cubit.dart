@@ -12,7 +12,7 @@ class SplashCubit extends Cubit<SplashState> {
 
   void initCubit() async {
     emit(SplashLoading());
-    await Future.delayed(const Duration(seconds: 1));
+    await Future.delayed(const Duration(seconds: 3));
 
     String? userId = await preferences.read(PreferencesKey.userId);
 

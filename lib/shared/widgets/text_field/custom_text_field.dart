@@ -10,6 +10,8 @@ Widget buildTextField({
   bool? obscureText = false,
   int? maxLines = 1,
   bool? isReadOnly = false,
+  String? Function(String?)? validator,
+  Function(String)? onFieldSubmitted,
 }) {
   return TextFormField(
     controller: controller,
@@ -17,6 +19,12 @@ Widget buildTextField({
     obscureText: obscureText!,
     readOnly: isReadOnly!,
     keyboardType: TextInputType.name,
+    onFieldSubmitted: onFieldSubmitted,
+    style: GoogleFonts.roboto(
+      fontSize: 12,
+      color: AppColors.black,
+      fontWeight: FontWeight.w300,
+    ),
     decoration: InputDecoration(
       floatingLabelBehavior: FloatingLabelBehavior.always,
       hintText: hintText,
@@ -29,7 +37,7 @@ Widget buildTextField({
       label: Text(label!),
       labelStyle: GoogleFonts.roboto(
         fontSize: 14,
-        color: AppColors.black40,
+        color: AppColors.black,
         fontWeight: FontWeight.w400,
       ),
       suffixIcon: suffixIcon,
@@ -53,10 +61,14 @@ Widget buildTextField({
             8), // Sesuaikan radius border sesuai kebutuhan
       ),
     ),
-    validator: (value) {
+    validator: validator ??
+        (value) {
       if (value!.isEmpty) {
         return "Harap di isi terlebih dahulu";
       }
+          if (value.length < 8) {
+            return "Password harus lebih dari 8 karakter";
+          }
       return null;
     },
   );

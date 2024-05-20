@@ -14,6 +14,7 @@ class Absence {
   String image;
   String latt;
   String long;
+  String spgName;
   String userLogin;
   dynamic deletedAt;
   DateTime createdAt;
@@ -29,6 +30,7 @@ class Absence {
     required this.image,
     required this.latt,
     required this.long,
+    required this.spgName,
     required this.userLogin,
     required this.deletedAt,
     required this.createdAt,
@@ -45,6 +47,7 @@ class Absence {
         image: json["image"],
         latt: json["latt"],
         long: json["long"],
+        spgName: json["spg_name"],
         userLogin: json["user_login"],
         deletedAt: json["deleted_at"],
         createdAt: DateTime.parse(json["created_at"]),
@@ -62,6 +65,7 @@ class Absence {
         "image": image,
         "latt": latt,
         "long": long,
+        "spg_name": spgName,
         "user_login": userLogin,
         "deleted_at": deletedAt,
         "created_at": createdAt.toIso8601String(),
