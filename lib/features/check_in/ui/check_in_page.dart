@@ -256,7 +256,7 @@ class _CheckInPageState extends State<CheckInPage> {
             builder: (context, state) {
               var cubitDropdown = context.read<CheckInCubit>();
 
-              List<DataStoreSales> listToko = [];
+              List<DataStore> listToko = [];
 
               listToko.addAll(cubitDropdown.listToko);
 
@@ -308,7 +308,7 @@ class _CheckInPageState extends State<CheckInPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "${toko.storeCode} - ${toko.storeName}",
+                            "${toko.code} - ${toko.name}",
                             style: GoogleFonts.nunito(
                               fontWeight: fontWeight,
                             ),
@@ -318,8 +318,8 @@ class _CheckInPageState extends State<CheckInPage> {
                     ),
                     onTap: () {
                       FocusScope.of(context).unfocus();
-                      storeController.text = toko.storeCode;
-                      namaToko.text = toko.storeName;
+                      storeController.text = toko.code;
+                      namaToko.text = toko.name;
                       cubit.dataStore = toko;
 
                       searchController.clear();

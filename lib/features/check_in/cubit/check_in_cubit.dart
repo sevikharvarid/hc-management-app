@@ -22,8 +22,8 @@ class CheckInCubit extends Cubit<CheckInState> {
   bool isChecked = false;
   bool isReadOnlyStore = false;
 
-  List<DataStoreSales> listToko = [];
-  DataStoreSales? dataStore;
+  List<DataStore> listToko = [];
+  DataStore? dataStore;
 
   Position? userPosition;
 
@@ -61,7 +61,7 @@ class CheckInCubit extends Cubit<CheckInState> {
     int storeId = 0;
 
     for (var item in listToko) {
-      if (item.storeCode == storeCode) {
+      if (item.code == storeCode) {
         storeId = item.id;
       }
     }
@@ -143,7 +143,7 @@ class CheckInCubit extends Cubit<CheckInState> {
     final List<dynamic> responseData = response.data['data'];
 
     listToko =
-        responseData.map((item) => DataStoreSales.fromJson(item)).toList();
+        responseData.map((item) => DataStore.fromJson(item)).toList();
 
     emit(CheckInFilterLoaded());
   }
