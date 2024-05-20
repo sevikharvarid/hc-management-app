@@ -46,3 +46,13 @@ class CheckInFilterLoaded extends CheckInState {
   @override
   List<Object> get props => [];
 }
+
+
+class CheckInSpgImageSaved extends CheckInState {
+  final File? imagePath;
+
+  const CheckInSpgImageSaved({this.imagePath});
+
+  @override
+  List<Object> get props => [imagePath!];
+}

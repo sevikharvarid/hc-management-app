@@ -38,6 +38,7 @@ class HomeSpgRepository {
       if (response!["responseCode"] == 200) {
         return DataResponse.success(data: response["data"]["data"]);
       } else {
+        log("masuk sini");
         return DataResponse.error(message: response['message'].toString());
       }
     } on RequestTimeoutException {

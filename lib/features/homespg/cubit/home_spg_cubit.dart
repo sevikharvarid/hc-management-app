@@ -21,14 +21,17 @@ class HomeSpgCubit extends Cubit<HomeSpgState> {
   String? imagePath;
   String? namaToko = "";
   String? nameSPG;
-  List<DataListSPG> listSPG = [];
-  DataListSPG? dataSPG;
+  List<DataSpg> listSPG = [];
+  DataSpg? dataSPG;
 
   String? latitudeStore;
   String? longitudeStore;
 
   String? radiusStore;
   double? radiusUser;
+
+
+  String? photoProfile;
 
   List<DataStore> dataStores = [];
 
@@ -50,6 +53,7 @@ class HomeSpgCubit extends Cubit<HomeSpgState> {
     // if (await Permission.location.isGranted) {
     //   await BackgroundService.instance.init();
     // }
+    photoProfile = await preferences.read(PreferencesKey.profilePhoto);
 
     var params = await preferences.read(PreferencesKey.userId);
 
@@ -81,13 +85,19 @@ class HomeSpgCubit extends Cubit<HomeSpgState> {
   Future<void> checkRadiusStore() async {
     emit(HomeSpgLoading());
 
-    var paramsRadius = 1;
+    var storeId = await preferences.read(PreferencesKey.storeId);
+
+    log("store ID : $storeId");
+
+    var paramsRadius = storeId;
     final response =
         await homeSpgRepository.getRadiusStoreLocation(paramsRadius);
 
-    latitudeStore = response.data["latt"];
-    longitudeStore = response.data["long"];
-    radiusStore = response.data["radius"].toString();
+    log("Respinse : $response");
+
+    latitudeStore = response.data['data'][0]["latt"];
+    longitudeStore = response.data['data'][0]["long"];
+    radiusStore = response.data['data'][0]["radius"].toString();
 
     double radius = await generalHelper.getPositionRadius(
       double.tryParse(latitudeStore!),
@@ -147,15 +157,15 @@ class HomeSpgCubit extends Cubit<HomeSpgState> {
   void getListSPGName() async {
     emit(HomeSpgFilterLoading());
 
-    var params = {
-      "id": 2,
-      "nama_store": "Toko bangunan",
-    };
+    var userId = await preferences.read(PreferencesKey.userId);
+
+    var params = userId;
 
     final response = await homeSpgRepository.getListSPGName(params);
+    log("reso : ${response.data}");
     final List<dynamic> responseData = response.data['data'];
 
-    listSPG = responseData.map((item) => DataListSPG.fromJson(item)).toList();
+    listSPG = responseData.map((item) => DataSpg.fromJson(item)).toList();
 
     emit(HomeSpgFilterLoaded());
   }
@@ -180,10 +190,12 @@ class HomeSpgCubit extends Cubit<HomeSpgState> {
     String jsonString = jsonEncode(dataMap);
 
     var params = {
+      'spg_name': dataSPG!.userName.toString(),
+      'spg_id': dataSPG!.userId.toString(),
       'store_id': dataStores[0].id.toString(),
       'store_name': dataStores[0].name,
       'date': generalHelper.convertDateToString(
-          dateTime: DateTime.now(), dateFormat: "yyyy/MM/dd"),
+          dateTime: DateTime.now(), dateFormat: "yyyy-MM-dd"),
       'time': generalHelper.convertDateToString(
           dateTime: DateTime.now(), dateFormat: "HH:mm"),
       'type': category,
@@ -198,17 +210,25 @@ class HomeSpgCubit extends Cubit<HomeSpgState> {
     final response = await homeSpgRepository.postSubmitData(params);
 
     log("response : ${response.data}");
-    log("response : $response");
+    log("response : ${response.status}");
 
     if (response.status == Status.success) {
       emit(HomeSpgSuccess(message: response.data['message']));
+      imagePath = null;
       return;
     }
 
     if (response.status == Status.failed) {
-      emit(HomeSpgFailed(message: response.data['message']));
+      emit(HomeSpgFailed(message: response.message));
       return;
     }
+
+    if (response.status == Status.error) {
+      emit(HomeSpgFailed(message: response.message));
+      return;
+    }
+
+
     emit(HomeSpgLoaded());
   }
 }

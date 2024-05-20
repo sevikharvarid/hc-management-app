@@ -7,4 +7,6 @@ class PreferencesKey {
   static const String interval = "interval";
   static const String userLogin = "userLogin";
   static const String userType = "userType";
+  static const String storeId = "storeId";
+  static const String profilePhoto = "profilePhoto";
 }

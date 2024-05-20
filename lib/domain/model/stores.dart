@@ -168,3 +168,57 @@ class Link {
         "active": active,
       };
 }
+
+
+
+
+
+///------------STORE UNTUK SALES-----------------//
+
+class DataStoreSales {
+  int id;
+  int storeId;
+  String storeName;
+  String storeCode;
+  int userId;
+  String userName;
+  dynamic deletedAt;
+  DateTime createdAt;
+  DateTime updatedAt;
+
+  DataStoreSales({
+    required this.id,
+    required this.storeId,
+    required this.storeName,
+    required this.storeCode,
+    required this.userId,
+    required this.userName,
+    required this.deletedAt,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory DataStoreSales.fromJson(Map<String, dynamic> json) => DataStoreSales(
+        id: json["id"],
+        storeId: json["store_id"],
+        storeName: json["store_name"],
+        storeCode: json["store_code"],
+        userId: json["user_id"],
+        userName: json["user_name"],
+        deletedAt: json["deleted_at"],
+        createdAt: DateTime.parse(json["created_at"]),
+        updatedAt: DateTime.parse(json["updated_at"]),
+      );
+
+  Map<String, dynamic> toJson() => {
+        "id": id,
+        "store_id": storeId,
+        "store_name": storeName,
+        "store_code": storeCode,
+        "user_id": userId,
+        "user_name": userName,
+        "deleted_at": deletedAt,
+        "created_at": createdAt.toIso8601String(),
+        "updated_at": updatedAt.toIso8601String(),
+      };
+}

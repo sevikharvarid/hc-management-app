@@ -24,7 +24,8 @@ class HomeSpgProvider {
 
   Future<Map<String, dynamic>?> getSPGName(dynamic params) async {
     try {
-      String paramsUrl = "/api/users?type=spg&isnotspv=1";
+      String paramsUrl =
+          "/api/memberspvs?type=spg&isnotspv=1&spv_id=$params&limit=999";
 
       apiProvider = HttpProvider(
         baseUrl: baseUrl,
@@ -47,7 +48,6 @@ class HomeSpgProvider {
         params: paramsUrl,
       );
 
-      // final String data = jsonEncode(params);
       return await apiProvider.postWithAbsenceImage(
         body: params,
       );
@@ -60,7 +60,7 @@ class HomeSpgProvider {
 
   Future<Map<String, dynamic>?> getRadiusStoreLocation(dynamic params) async {
     try {
-      String paramsUrl = "/api/storelocations/$params";
+      String paramsUrl = "/api/storelocations?limit=1&store_id=$params";
 
       apiProvider = HttpProvider(
         baseUrl: baseUrl,
@@ -73,42 +73,4 @@ class HomeSpgProvider {
       throw Error();
     }
   }
-
-  // Future<Map<String, dynamic>?> postSubmitData(dynamic params) async {
-  //   try {
-  //     String paramsUrl = "/api/absents";
-  //     String stringUrl = "$baseUrl$paramsUrl";
-
-  //     var request = http.MultipartRequest('POST', Uri.parse(stringUrl));
-  //     request.fields.addAll({
-  //       'store_id': params['store_id'],
-  //       'store_name': params['store_name'],
-  //       'date': params['date'],
-  //       'time': params['time'],
-  //       'type': params['type'],
-  //       'latt': params['latt'],
-  //       'long': params['long'],
-  //       'user_login': params['user_login'],
-  //     });
-
-  //     request.files
-  //         .add(await http.MultipartFile.fromPath('image', params['image']));
-
-  //     http.StreamedResponse response = await request.send();
-
-  //     // Konversi respons menjadi string JSON
-  //     String responseBody = await response.stream.bytesToString();
-
-  //     // Print respons untuk debug
-  //     print("RESPONSE: $responseBody");
-
-  //     // Konversi string JSON menjadi Map
-  //     Map<String, dynamic>? jsonResponse = json.decode(responseBody);
-
-  //     return jsonResponse;
-  //   } on Exception catch (e) {
-  //     log("Error message : $e");
-  //     throw Error();
-  //   }
-  // }
 }

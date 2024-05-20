@@ -30,7 +30,11 @@ class _DashboardPageState extends State<DashboardPage> {
           if (state is DashboardHome) {
             return BlocProvider<HomeCubit>(
               create: (context) => HomeCubit()..initCubit(),
-              child: const HomePage(),
+              child: HomePage(
+                onClickViewAll: () {
+                  cubit.changePage(1);
+                },
+              ),
             );
           }
           if (state is DashboardRequest) {

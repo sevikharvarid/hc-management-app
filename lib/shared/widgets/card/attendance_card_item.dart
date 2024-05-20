@@ -7,15 +7,17 @@ import 'package:hc_management_app/shared/widgets/atom/spacer.dart';
 class AttendanceCardItem extends StatelessWidget {
   final String? attendanceDate;
   final String? startDayTime;
-  final String? endDayTime;
   final String? typeAbsence;
+  final String? spgName;
+  final String? storeName;
 
   const AttendanceCardItem({
     super.key,
     this.attendanceDate,
     this.startDayTime,
-    this.endDayTime,
     this.typeAbsence,
+    this.spgName,
+    this.storeName,
   });
 
   @override
@@ -41,13 +43,26 @@ class AttendanceCardItem extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            attendanceDate!,
-            style: GoogleFonts.nunito(
-              color: AppColors.black,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+          Row(
+            children: [
+              Text(
+                attendanceDate!,
+                style: GoogleFonts.nunito(
+                  color: AppColors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                storeName ?? '',
+                style: GoogleFonts.nunito(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ],
           ),
           spaceHeight(height: SizeUtils.basePaddingMargin16),
           Row(
@@ -86,16 +101,12 @@ class AttendanceCardItem extends StatelessWidget {
               spaceWidth(width: SizeUtils.basePaddingMargin80),
               Row(
                 children: [
-                  // Icon(
-                  //   Icons.location_on,
-                  //   color: AppColors.redButton,
-                  //   size: 50,
-                  // ),
+                
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Toko",
+                        "Nama",
                         style: GoogleFonts.nunito(
                           color: AppColors.black,
                           fontWeight: FontWeight.bold,
@@ -103,7 +114,7 @@ class AttendanceCardItem extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        endDayTime!,
+                        spgName!,
                         style: GoogleFonts.nunito(
                           color: AppColors.primary,
                           fontWeight: FontWeight.bold,

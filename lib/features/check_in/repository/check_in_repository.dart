@@ -31,7 +31,7 @@ class CheckInRepository {
         return const DataResponse.noConnection();
       }
 
-      var response = await checkInProvider.postSubmitData(body);
+      var response = await checkInProvider.postSubmitVisit(body);
 
       if (response!["responseCode"] == 200) {
         return DataResponse.success(data: response['data']);

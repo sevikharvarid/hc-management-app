@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hc_management_app/config/routes.dart';
+import 'package:hc_management_app/features/check_out_sales/cubit/check_out_sales_cubit.dart';
+import 'package:hc_management_app/features/check_out_sales/ui/check_out_sales_main.dart';
 import 'package:hc_management_app/features/dashboard/cubit/dashboard_cubit.dart';
 import 'package:hc_management_app/features/dashboard/ui/dashboard_page.dart';
 import 'package:hc_management_app/features/dashboardspg/cubit/dashboard_spg_cubit.dart';
@@ -19,6 +21,7 @@ import 'package:hc_management_app/features/profile/profile_spg/cubit/profile_spg
 import 'package:hc_management_app/features/profile/profile_spg/ui/profile_spg_page.dart';
 import 'package:hc_management_app/features/splash/cubit/splash_cubit.dart';
 import 'package:hc_management_app/features/splash/ui/splash_page.dart';
+import 'package:hc_management_app/shared/utils/constant/app_constant.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({
@@ -29,8 +32,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     // return ScreenUtilInit(
     return ScreenUtilInit(
+      
       designSize: const Size(360, 690),
       builder: (_, __) => MaterialApp(
+        navigatorKey: AppConstant.navigatorKey,
         debugShowCheckedModeBanner: false,
         title: "HC Management App",
         theme: ThemeData(
@@ -109,6 +114,14 @@ class MyApp extends StatelessWidget {
                   child: const ProfileSPGPage(),
                 ),
               );
+
+            case Routes.checkoutSales:
+              return CupertinoPageRoute(
+                builder: (context) => BlocProvider<CheckOutSalesCubit>(
+                  create: (context) => CheckOutSalesCubit()..initCubit(),
+                  child: const CheckoutSalesMainPage(),
+                ),
+              );  
 
             default:
               return CupertinoPageRoute(

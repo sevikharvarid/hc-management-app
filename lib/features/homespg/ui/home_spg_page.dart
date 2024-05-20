@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -20,6 +21,7 @@ import 'package:hc_management_app/shared/widgets/atom/spacer.dart';
 import 'package:hc_management_app/shared/widgets/button/custom_button.dart';
 import 'package:hc_management_app/shared/widgets/custom_widget/custom_loading.dart';
 import 'package:hc_management_app/shared/widgets/dropdown/dropdown_with_search.dart';
+import 'package:hc_management_app/shared/widgets/image/image_network_rectangle.dart';
 import 'package:hc_management_app/shared/widgets/text_field/input_text_field_default.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -191,8 +193,22 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
                               color: Colors
-                                  .grey, // Ganti dengan warna yang diinginkan
+                                  .white, // Ganti dengan warna yang diinginkan
                             ),
+                            child: cubit.photoProfile != null
+                                ? ClipOval(
+                                    child: ImageNetworkRectangle(
+                                      width: SizeUtils.baseWidthHeight110,
+                                      height: SizeUtils.baseWidthHeight110,
+                                      imageUrl:
+                                          "http://103.140.34.220:280/storage/storage/${cubit.photoProfile}",
+                                      boxFit: BoxFit.cover,
+                                    ),
+                                  )
+                                : Icon(
+                                    Icons.person,
+                                    color: AppColors.black,
+                                  ),
                           ),
                           const SizedBox(
                             width: 16,
@@ -448,7 +464,8 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                         if (await Permission
                             .locationWhenInUse.serviceStatus.isDisabled) {
                           showLocationMessage(
-                              "Tolong aktifkan lokasi terlebih dahulu !");
+                              message:
+                                  "Tolong aktifkan lokasi terlebih dahulu !");
                         } else {
                           if (nameController.text.isNotEmpty) {
                             showMessage(
@@ -463,7 +480,9 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                         }
                       } else {
                         showLocationMessage(
-                            "Anda terlalu jauh ${(radiusStore - radius).toInt()} Meter dari lokasi !");
+                            title: "Anda berada diluar Area",
+                            message:
+                                "Tidak boleh absen diluar area yang sidah ditentukan!");
                       }
                    
                     },
@@ -486,12 +505,15 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
 
                       double? radius = cubit.radiusUser;
                       double? radiusStore = double.parse(cubit.radiusStore!);
+                      log("Radius User : ${radius.toString()}");
+                      log("Radius Store : ${radiusStore.toString()}");
 
                       if (radius! < radiusStore) {
                         if (await Permission
                             .locationWhenInUse.serviceStatus.isDisabled) {
                           showLocationMessage(
-                              "Tolong aktifkan lokasi terlebih dahulu !");
+                              message:
+                                  "Tolong aktifkan lokasi terlebih dahulu !");
                         } else {
                           if (nameController.text.isNotEmpty) {
                             showMessage(
@@ -507,7 +529,9 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                         }
                       } else {
                         showLocationMessage(
-                            "Anda terlalu jauh ${(radiusStore - radius).toInt()} Meter dari lokasi !");
+                            title: "Anda berada diluar Area",
+                            message:
+                                "Tidak boleh absen diluar area yang sidah ditentukan!");
                       }
                     },
                     withIcon: false,
@@ -523,10 +547,13 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
     );
   }
 
-  showLocationMessage(String? message) {
+  showLocationMessage({
+    String? message,
+    String? title = "Terjadi Kesalahan",
+  }) {
     return CustomBottomSheet().showCustomBottomSheet(
       context: context,
-      title: "Terjadi Kesalahan",
+      title: title,
       titleIcon: "assets/icons/ic_caution_red.svg",
       bodyContent: Column(
         mainAxisSize: MainAxisSize.min,
@@ -663,6 +690,7 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                       cubit.postInCubit(
                         category: isMasuk ? "in" : "out",
                       );
+                     
                     },
                     withIcon: false,
                     active: true,
@@ -694,7 +722,7 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
             builder: (context, state) {
               var cubitDropdown = context.read<HomeSpgCubit>();
 
-              List<DataListSPG> listSPG = [];
+              List<DataSpg> listSPG = [];
 
               listSPG.addAll(cubitDropdown.listSPG);
 
@@ -746,7 +774,7 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            nama.name,
+                            nama.userName,
                             style: GoogleFonts.nunito(
                               fontWeight: fontWeight,
                             ),
@@ -756,7 +784,8 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                     ),
                     onTap: () {
                       FocusScope.of(context).unfocus();
-                      nameController.text = nama.name;
+                      nameController.text = nama.userName;
+                      
                       cubit.dataSPG = nama;
 
                       searchController.clear();

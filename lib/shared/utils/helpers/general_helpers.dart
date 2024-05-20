@@ -1,6 +1,12 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:geolocator/geolocator.dart';
 import 'package:hc_management_app/shared/utils/constant/app_constant.dart';
+import 'package:image/image.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 
 class GeneralHelper {
   Future<double> getPositionRadius(
@@ -39,4 +45,117 @@ class GeneralHelper {
     }
     return null;
   }
+
+  List<String> getMonthStartAndEndDate(String monthYear) {
+    DateFormat dateFormat = DateFormat("MMMM y", "id");
+    DateTime date = dateFormat.parse(monthYear);
+    DateTime startDate = DateTime(date.year, date.month, 1);
+    DateTime endDate = DateTime(date.year, date.month + 1, 0);
+    DateFormat outputFormat = DateFormat("yyyy-MM-dd");
+    return [outputFormat.format(startDate), outputFormat.format(endDate)];
+  }
+
+  DateTime? convertStringToDate({
+    required String stringDate,
+    String? dateFormat = "dd MMMM yyyy",
+    bool utc = false,
+  }) {
+    if (stringDate.isNotEmpty) {
+      DateTime date = DateFormat(
+        dateFormat,
+        AppConstant.locale,
+      ).parse(stringDate, utc);
+      return date;
+    }
+    return null;
+  }
+
+  List<DateTime> convertStringToMultipleDate({
+    required String stringDate,
+    String dateFormat = "dd MMMM yyyy",
+    String splitPattern = " - ",
+  }) {
+    List<DateTime> result = [];
+    List<String> splitData = stringDate.split(splitPattern);
+
+    for (String data in splitData) {
+      result.add(
+        convertStringToDate(
+          stringDate: data,
+          dateFormat: dateFormat,
+        )!,
+      );
+    }
+
+    return result;
+  }
+
+  String? convertSingleOrRangeDate({
+    List<DateTime?>? value,
+  }) {
+    String date = '';
+
+    if (value!.length > 1) {
+      date =
+          "${DateFormat("dd MMMM yyyy", AppConstant.locale).format(value[0]!)} - ${DateFormat("dd MMMM yyyy", AppConstant.locale).format(value[1]!)}";
+    } else {
+      date = DateFormat("dd MMMM yyyy", AppConstant.locale)
+          .format(value[0]!)
+          .toString();
+    }
+    return date;
+  }
+
+  Future<File?> pickImage(
+      {bool? camera = true, CameraDevice? preferredCameraDevice}) async {
+    final ImagePicker picker = ImagePicker();
+    XFile? pickerImage;
+
+    pickerImage = await picker.pickImage(
+      source: camera! ? ImageSource.camera : ImageSource.gallery,
+      preferredCameraDevice: preferredCameraDevice ?? CameraDevice.rear,
+      imageQuality: 50,
+    );
+
+    File? pickedImage;
+    pickedImage = File(pickerImage!.path);
+    return pickedImage;
+  }
+
+  Future<File> convertImageToJpg({
+    required File? file,
+    int? quality,
+  }) async {
+    Directory tempDir = await getTemporaryDirectory();
+    String temporaryPath = tempDir.path;
+
+    String originalFileName = file!.path.split('/').last;
+    originalFileName = originalFileName.split('.').first;
+
+    final imageBytes = await file.readAsBytes();
+    Image? image = decodeImage(Uint8List.fromList(imageBytes));
+
+    final jpgBytes = encodeJpg(image!, quality: quality ?? 60);
+
+    File jpgFile = File('$temporaryPath/$originalFileName.jpg');
+    await jpgFile.writeAsBytes(jpgBytes);
+
+    return jpgFile;
+  }
+
+  bool validateImageSize({
+    required File file,
+    int maximumSize = 5,
+  }) {
+    int sizeInBytes = file.lengthSync();
+    double imageSize = sizeInBytes / (1024 * 1024);
+    return (imageSize <= maximumSize);
+  }
+
+  bool validateImageExtension({required File file}) {
+    List<String> acceptedImaged = ["png", "jpg", "jpeg", "heic"];
+    return acceptedImaged.contains(file.path.split(".").last);
+  }
+
+
 }

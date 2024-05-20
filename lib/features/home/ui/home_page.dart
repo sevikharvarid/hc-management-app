@@ -1,19 +1,30 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hc_management_app/domain/model/menus.dart';
+import 'package:hc_management_app/config/routes.dart';
 import 'package:hc_management_app/features/check_in/ui/check_in_page.dart';
 import 'package:hc_management_app/features/home/cubit/home_cubit.dart';
 import 'package:hc_management_app/shared/utils/constant/app_colors.dart';
 import 'package:hc_management_app/shared/utils/constant/size_utils.dart';
+import 'package:hc_management_app/shared/utils/helpers/general_helpers.dart';
 import 'package:hc_management_app/shared/widgets/atom/spacer.dart';
 import 'package:hc_management_app/shared/widgets/button/custom_button.dart';
-import 'package:hc_management_app/shared/widgets/card/attendance_card_item.dart';
-import 'package:hc_management_app/shared/widgets/card/custom_card.dart';
+import 'package:hc_management_app/shared/widgets/card/visit_cart_item.dart';
+import 'package:hc_management_app/shared/widgets/custom_widget/custom_loading.dart';
+import 'package:hc_management_app/shared/widgets/image/image_network_rectangle.dart';
+import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+
+  final VoidCallback? onClickViewAll;
+
+  const HomePage({
+    super.key,
+    this.onClickViewAll,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -23,10 +34,25 @@ class _HomePageState extends State<HomePage> {
   final ScrollController _scrollController = ScrollController();
   bool _changeColor = false;
 
+  late StreamController<DateTime> _dateTimeController;
+  late Stream<DateTime> _dateTimeStream;
+  late Timer _timeUpdater;
+
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    _dateTimeController = StreamController<DateTime>();
+    _dateTimeStream = _dateTimeController.stream;
+    _startUpdatingTime();
+  }
+
+  void _startUpdatingTime() {
+    _timeUpdater = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!_dateTimeController.isClosed) {
+        _dateTimeController.add(DateTime.now());
+      }
+    });
   }
 
   @override
@@ -89,17 +115,19 @@ class _HomePageState extends State<HomePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Morning,",
+                          "Hello,",
                           style: GoogleFonts.nunito(
                             fontWeight: FontWeight.w400,
                             fontSize: 20,
+                            color: AppColors.white,
                           ),
                         ),
                         Text(
-                          "Vera Angelina",
+                          cubit.name ?? "No Name",
                           style: GoogleFonts.nunito(
                             fontWeight: FontWeight.w700,
                             fontSize: 18,
+                            color: AppColors.white,
                           ),
                         ),
                       ],
@@ -113,8 +141,23 @@ class _HomePageState extends State<HomePage> {
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
                               color: Colors
-                                  .grey, // Ganti dengan warna yang diinginkan
+                                  .white, // Ganti dengan warna yang diinginkan
                             ),
+                            child: (cubit.photoProfile != null &&
+                                    cubit.photoProfile != '')
+                                ? ClipOval(
+                                    child: ImageNetworkRectangle(
+                                      width: SizeUtils.baseWidthHeight110,
+                                      height: SizeUtils.baseWidthHeight110,
+                                      imageUrl:
+                                          "http://103.140.34.220:280/storage/storage/${cubit.photoProfile}",
+                                      boxFit: BoxFit.cover,
+                                    ),
+                                  )
+                                : Icon(
+                                    Icons.person,
+                                    color: AppColors.black,
+                                  ),
                           ),
                           const SizedBox(
                             width: 16,
@@ -127,22 +170,8 @@ class _HomePageState extends State<HomePage> {
                     delegate: SliverChildListDelegate(
                       [
                         spaceHeight(height: 20),
-                        const CustomCard(),
-                        spaceHeight(height: 20),
-                        // Container(
-                        //   padding: const EdgeInsets.symmetric(
-                        //       vertical: 4, horizontal: 16),
-                        //   child: Text(
-                        //     "Toko Sejahtera Abadi",
-                        //     style: GoogleFonts.nunito(
-                        //       fontWeight: FontWeight.bold,
-                        //       color: AppColors.white,
-                        //       fontSize: 14,
-                        //     ),
-                        //   ),
-                        // ),
+                        header(cubit),
                         buildMenu(
-                          menus: cubit.menus,
                         ),
                         spaceHeight(height: SizeUtils.basePaddingMargin8),
                         Container(
@@ -152,7 +181,7 @@ class _HomePageState extends State<HomePage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                "Attendance",
+                                "Visits",
                                 style: GoogleFonts.nunito(
                                   color: _changeColor
                                       ? AppColors.white
@@ -163,12 +192,10 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                               GestureDetector(
-                                // onTap: () => BlocProvider<RequestSalesCubit>(
-                                //   create: (context) =>
-                                //       RequestSalesCubit()..initCubit(),
-                                //   child: const RequestSalesPage(),
-                                // ),
-                                onTap: () {},
+                              
+                                onTap: () {
+                                  widget.onClickViewAll!.call();
+                                },
                                 child: Text(
                                   "View All",
                                   style: GoogleFonts.roboto(
@@ -192,12 +219,22 @@ class _HomePageState extends State<HomePage> {
                               height: SizeUtils.basePaddingMargin2),
                           itemBuilder: (context, index) {
                             return GestureDetector(
-                                onTap: () {},
-                                child: const AttendanceCardItem(
-                                  attendanceDate: "Wed, 17 Jan 2024",
-                                  startDayTime: "08:59",
-                                  endDayTime: "18:00",
-                                ));
+                              onTap: () {
+                                Navigator.pushNamed(
+                                    context, Routes.checkoutSales);
+                              },
+                              child: const VisitCardItem(
+                                attendanceDate: "Wed, 17 Jan 2024",
+                                startDateTime: "08:59",
+                                endDateTime: "10:20",
+                                typeAbsence: "in",
+                                spgName: "Wahyu",
+                                storeName: "Toko sejahtera Abadi",
+                                storeCode: "KD01",
+                                soNumber: "S0XXXXX9",
+                                // endDayTime: "18:00",
+                              ),
+                            );
                           },
                         ),
                       ],
@@ -212,9 +249,91 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget buildMenu({
-    List<Menus>? menus,
-  }) {
+  Widget header(HomeCubit cubit) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 15),
+      height: 150,
+      width: MediaQuery.of(context).size.width,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+      ),
+      child: Container(
+        padding: const EdgeInsets.only(left: 16, right: 16),
+        width: 230,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Text(
+                    "Kunjungan",
+                    style: GoogleFonts.nunito(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.redText,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                Text(
+                  GeneralHelper().convertDateToString(
+                      dateTime: DateTime.now(),
+                      dateFormat: "EEEE, dd MMMM yyyy")!,
+                  style: GoogleFonts.roboto(
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.grey40,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            spaceHeight(height: 20),
+            StreamBuilder<DateTime>(
+                stream: _dateTimeStream,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    // Format waktu menggunakan intl
+                    String formattedTime =
+                        DateFormat('HH:mm:ss', 'id_ID').format(snapshot.data!);
+                    return Expanded(
+                      flex: 2,
+                      child: Text(
+                        formattedTime,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.roboto(
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.black60,
+                          fontSize: 30,
+                        ),
+                      ),
+                    );
+                  } else {
+                    return Align(
+                      alignment: Alignment.centerRight,
+                      child: Container(
+                        width: 200,
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
+                        child: const CustomLoading.defaultShape(
+                          heightLoading: 15,
+                        ),
+                      ),
+                    );
+                  }
+                }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildMenu() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 16),
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),

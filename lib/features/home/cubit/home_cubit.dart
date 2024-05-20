@@ -1,40 +1,44 @@
+import 'dart:developer';
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/material.dart';
-import 'package:hc_management_app/domain/model/menus.dart';
-import 'package:hc_management_app/shared/utils/constant/app_colors.dart';
+import 'package:hc_management_app/features/home/repository/home_sales_repository.dart';
+import 'package:hc_management_app/shared/utils/preferences/preferences.dart';
+import 'package:hc_management_app/shared/utils/preferences/preferences_key.dart';
 
 part 'home_state.dart';
 
 class HomeCubit extends Cubit<HomeState> {
   HomeCubit() : super(HomeInitial());
 
-  List<Menus>? menus = [];
+  
+  String? name;
+  String? photoProfile = '';
+
+  Preferences preferences = Preferences();
+  HomeSalesRepository homeSalesRepository = HomeSalesRepository();
+
 
   void initCubit() async {
     emit(HomeLoading());
-    menus = [
-      Menus(
-        menuTitle: "List Toko",
-        iconData: Icons.list_alt_rounded,
-        iconColor: AppColors.yellow,
-      ),
-      Menus(
-        menuTitle: "Other\nToko",
-        iconData: Icons.person_add_alt_1,
-        iconColor: AppColors.orange,
-      ),
-      Menus(
-        menuTitle: "Note\nKunjungan",
-        iconData: Icons.av_timer,
-        iconColor: AppColors.blue70,
-      ),
-      Menus(
-        menuTitle: "Orderan\nSO",
-        iconData: Icons.note_alt_rounded,
-        iconColor: AppColors.green,
-      ),
-    ];
+
+    await Future.delayed(const Duration(seconds: 1));
+
+    name = await preferences.read(PreferencesKey.name);
+
+    photoProfile = await preferences.read(PreferencesKey.profilePhoto);
+
+    var params = {};
+
+    var response = await homeSalesRepository.getHistoryVisits(params);
+
+    log("RESPONSE : ${response.data}");
+  
+ 
     emit(HomeLoaded());
   }
+
+
+
+  
 }

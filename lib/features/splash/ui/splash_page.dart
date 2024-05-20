@@ -31,7 +31,15 @@ class _SplashPageState extends State<SplashPage> {
       },
       builder: (context, state) {
         return Scaffold(
-          body: Container(),
+          body: Container(
+            margin: EdgeInsets.zero,
+            child: Image.asset(
+              // "assets/images/splash_screen_background.png",
+              "assets/gif/splash_screen.gif",
+              height: MediaQuery.of(context).size.height,
+              fit: BoxFit.fill,
+            ),
+          ),
         );
       },
     );
