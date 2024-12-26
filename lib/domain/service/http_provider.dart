@@ -93,7 +93,6 @@ class HttpProvider {
     return responseJson;
   }
 
-
   // TODO Method post
   Future<Map<String, dynamic>?> patch({dynamic body}) async {
     dynamic responseJson;
@@ -179,65 +178,75 @@ class HttpProvider {
 
   Future<Map<String, dynamic>?> postWithVisitsImage({
     required Map<String, dynamic> body,
+    required String? status,
+    required List<String> imagePaths,
   }) async {
     dynamic responseJson;
     String stringUrl = "$baseUrl$params";
     final headers = await getHeaders();
 
-    var client = RetryClient(
-      http.Client(),
-      retries: 3,
-      onRetry: (req, res, retryCount) {
-        if (res?.statusCode == 403) {
-          // BaseApiProvider().navigateToLogout();
-        }
-      },
-    );
-
     try {
       var request = http.MultipartRequest('POST', Uri.parse(stringUrl));
-
       request.headers.addAll(headers);
-      request.fields.addAll({
-        'store_id': body['store_id'],
-        'store_name': body['store_name'],
-        'store_type': body['store_type'],
-        'note': body['note'],
-        'in_date': body['in_date'],
-        'in_time': body['in_time'],
-        'in_lat': body['in_lat'],
-        'in_long': body['in_long'],
-        'out_date': body['out_date'] ?? '',
-        'out_time': body['out_time'] ?? '',
-        'out_lat': body['out_lat'] ?? '',
-        'out_long': body['out_long'] ?? '',
-        'user_login': body['user_login'],
-      });
+      if (status == 'in') {
+        request.fields.addAll({
+          'store_id': body['store_id'],
+          'store_name': body['store_name'],
+          'store_code': body['store_code'],
+          'note': body['note'],
+          'in_date': body['in_date'],
+          'in_time': body['in_time'],
+          'in_lat': body['in_lat'],
+          'in_long': body['in_long'],
+          'user_login': body['user_login'],
+          'user_id': body['user_id'],
+        });
+        for (var image in imagePaths) {
+          request.files
+              .add(await http.MultipartFile.fromPath('image[]', image));
+        }
 
-      request.files
-          .add(await http.MultipartFile.fromPath('image', body['image']));
+        http.StreamedResponse streamedResponse = await request.send();
+        http.Response postResponse =
+            await http.Response.fromStream(streamedResponse);
+        responseJson = response(postResponse);
+      }
 
-      http.StreamedResponse streamedResponse = await client.send(request);
+      if (status == 'out') {
+        request.fields.addAll({
+          'store_id': body['store_id'],
+          'store_name': body['store_name'],
+          'store_code': body['store_code'],
+          'out_date': body['out_date'],
+          'out_time': body['out_time'],
+          'out_lat': body['out_lat'],
+          'out_long': body['out_long'],
+          'user_login': body['user_login'],
+          '_method': body['method'],
+          'user_id': body['user_id'],
+        });
+        http.StreamedResponse streamedResponse = await request.send();
+        http.Response postResponse =
+            await http.Response.fromStream(streamedResponse);
+        responseJson = response(postResponse);
+      }
 
-      http.Response postResponse =
-          await http.Response.fromStream(streamedResponse);
-
-      responseJson = response(postResponse);
+      log("REQUEST :$request");
     } on Exception catch (e) {
       log(e.toString());
     } finally {
-      client.close();
+      // client.close();
     }
 
     return responseJson;
   }
-
 }
 
 dynamic response(http.Response response) {
   dynamic data = jsonDecode(response.body.toString());
-  log("data : ${const JsonEncoder.withIndent(' ').convert(data)}");
+  log("data dynamic : $data");
   log("STATUSCODE : ${response.statusCode}");
+  log("data : ${const JsonEncoder.withIndent(' ').convert(data)}");
 
   switch (response.statusCode) {
     case 200:

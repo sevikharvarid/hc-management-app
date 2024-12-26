@@ -43,7 +43,7 @@ class LoginCubit extends Cubit<LoginState> {
       }
 
       if (response.status == Status.success) {
-        Users responseUser = usersFromJson(json.encode(response.data));
+        Users? responseUser = usersFromJson(json.encode(response.data));
         log(const JsonEncoder.withIndent('  ').convert(responseUser.data));
 
         Map<String, dynamic> createdByMap =
@@ -73,9 +73,14 @@ class LoginCubit extends Cubit<LoginState> {
           await preferences.store(
               PreferencesKey.profilePhoto, responseUser.data.photo.toString());
         }
-          
 
         if (responseUser.data.type == 'sales') {
+          updateUserSales(
+            userId: responseUser.data.id.toString(),
+            name: responseUser.data.name.toString(),
+            nik: responseUser.data.nik.toString(),
+            notes: responseUser.data.notes.toString(),
+          );
           emit(LoginSuccessSalesDashboard());
         } else if (responseUser.data.type == 'spg') {
           updateUser(
@@ -107,7 +112,7 @@ class LoginCubit extends Cubit<LoginState> {
     String? notes,
   }) async {
     var headers = {'Content-Type': 'application/json'};
-    var url = 'http://103.140.34.220:280/api/users/$userId';
+    var url = 'https://visit.sanwin.my.id/api/users/$userId';
 
     try {
       var response = await http.patch(
@@ -117,6 +122,38 @@ class LoginCubit extends Cubit<LoginState> {
           "name": name,
           "type": "spg",
           "role": "supervisor",
+          "nik": nik,
+          "notes": notes,
+          "password": generateRandomString(10),
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        log(response.body);
+      } else {
+        log('Failed to update user: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      log('Error updating user: $e');
+    }
+  }
+
+  Future<void> updateUserSales({
+    String? userId,
+    String? name,
+    String? nik,
+    String? notes,
+  }) async {
+    var headers = {'Content-Type': 'application/json'};
+    var url = 'https://visit.sanwin.my.id/api/users/$userId';
+
+    try {
+      var response = await http.patch(
+        Uri.parse(url),
+        headers: headers,
+        body: json.encode({
+          "name": name,
+          "type": "sales",
           "nik": nik,
           "notes": notes,
           "password": generateRandomString(10),

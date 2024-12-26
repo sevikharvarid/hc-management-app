@@ -18,3 +18,8 @@ class RequestSalesLoaded extends RequestSalesState {
   @override
   List<Object> get props => [];
 }
+
+class RequestSalesSuccessGet extends RequestSalesState {
+  @override
+  List<Object> get props => [];
+}

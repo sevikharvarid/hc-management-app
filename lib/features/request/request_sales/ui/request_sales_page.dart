@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hc_management_app/config/routes.dart';
+import 'package:hc_management_app/domain/model/visits.dart';
 import 'package:hc_management_app/features/request/request_sales/cubit/request_sales_cubit.dart';
 import 'package:hc_management_app/shared/utils/constant/app_colors.dart';
 import 'package:hc_management_app/shared/utils/constant/size_utils.dart';
-import 'package:hc_management_app/shared/widgets/alert/custom_bottom_sheet.dart';
+import 'package:hc_management_app/shared/widgets/alert/progress_dialog.dart';
 import 'package:hc_management_app/shared/widgets/atom/spacer.dart';
 import 'package:hc_management_app/shared/widgets/card/visit_cart_item.dart';
 import 'package:hc_management_app/shared/widgets/custom_widget/input_month_filter.dart';
+import 'package:hc_management_app/shared/widgets/image/image_lottie.dart';
 
 class RequestSalesPage extends StatefulWidget {
   const RequestSalesPage({super.key});
@@ -21,8 +24,19 @@ class _RequestSalesPageState extends State<RequestSalesPage> {
   TextEditingController monthController = TextEditingController();
   @override
   Widget build(BuildContext context) {
+    var cubit = context.read<RequestSalesCubit>();
     return BlocConsumer<RequestSalesCubit, RequestSalesState>(
-      listener: (context, state) {},
+      listener: (context, state) {
+        if (state is RequestSalesLoading) {
+          showProgressDialog(context: context);
+        }
+
+        if (state is RequestSalesLoaded) {
+          Navigator.pop(context);
+        }
+
+        if (state is RequestSalesSuccessGet) {}
+      },
       builder: (context, state) {
         return Scaffold(
           backgroundColor: AppColors.white,
@@ -65,20 +79,24 @@ class _RequestSalesPageState extends State<RequestSalesPage> {
                       InputMonthField(
                         bottomSheetLabel: "Pilih Tanggal",
                         controller: monthController,
-                        onSelected: (value) {},
+                        onSelected: (value) {
+                          cubit.selectMonth(
+                            month: monthController.text,
+                          );
+                        },
                       ),
                       spaceWidth(width: 8),
-                      GestureDetector(
-                          onTap: () {
-                            CustomBottomSheet().openRequestTypePicker(
-                              context,
-                              "Request Type",
-                              requestTypeController,
-                              ["Awaiting", "Pending", "Cancelled", "Approved"],
-                            ).then((value) {});
-                          },
-                          child: cardFilter(
-                              title: "Request Type", isDropdown: true)),
+                      // GestureDetector(
+                      //     onTap: () {
+                      //       CustomBottomSheet().openRequestTypePicker(
+                      //         context,
+                      //         "Request Type",
+                      //         requestTypeController,
+                      //         ["Awaiting", "Pending", "Cancelled", "Approved"],
+                      //       ).then((value) {});
+                      //     },
+                      //     child: cardFilter(
+                      //         title: "Request Type", isDropdown: true)),
                     ],
                   ),
                 ),
@@ -86,26 +104,57 @@ class _RequestSalesPageState extends State<RequestSalesPage> {
               SliverList(
                 delegate: SliverChildListDelegate(
                   [
+                    cubit.visits.isEmpty
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const ImageLottie(
+                                lottiePath: "assets/jsons/empty_data.json",
+                                width: SizeUtils.baseWidthHeight214,
+                                height: SizeUtils.baseWidthHeight214,
+                              ),
+                              Text(
+                                "Data tidak di temukan",
+                                style: GoogleFonts.nunito(
+                                  fontWeight: FontWeight.w400,
+                                  color: AppColors.black,
+                                  fontSize: 20,
+                                ),
+                              ),
+                            ],
+                          )
+                        :
                     ListView.separated(
                       padding: const EdgeInsets.only(top: 4, bottom: 20),
                       physics: const NeverScrollableScrollPhysics(),
                       shrinkWrap: true,
-                      itemCount: 10,
+                            itemCount: cubit.visits.length,
                       separatorBuilder: (context, index) =>
                           const SizedBox(height: SizeUtils.basePaddingMargin2),
                       itemBuilder: (context, index) {
+                              var data = cubit.visits[index];
                         return GestureDetector(
-                          onTap: () {},
-                          child: const VisitCardItem(
-                            attendanceDate: "Wed, 17 Jan 2024",
-                            startDateTime: "08:59",
-                            endDateTime: "10:20",
-                            typeAbsence: "in",
-                            spgName: "Wahyu",
-                            storeName: "Toko sejahtera Abadi",
-                            storeCode: "KD01",
-                            soNumber: "S0XXXXX9",
-                            // endDayTime: "18:00",
+                                onTap: () => onPressedCardList(cubit, data),
+                                child: VisitCardItem(
+                                  attendanceDateIn: data.inDate != null
+                                      ? cubit.generalHelper.convertDateToString(
+                                          dateFormat: "EEEE, dd MMMM yyyy",
+                                          dateTime:
+                                              DateTime.parse(data.inDate!),
+                                        )
+                                      : '-',
+                                  attendanceDateOut: data.outDate != null
+                                      ? cubit.generalHelper.convertDateToString(
+                                          dateFormat: "EEEE, dd MMMM yyyy",
+                                          dateTime:
+                                              DateTime.parse(data.outDate!),
+                                        )
+                                      : '-',
+                                  startDateTime: data.inTime,
+                                  endDateTime: data.outTime ?? '-',
+                                  storeName: data.storeName ?? '-',
+                                  storeCode: data.storeCode ?? '-',
+                                  soNumber: "S0XXXXX9",
                           ),
                         );
                       },
@@ -118,6 +167,23 @@ class _RequestSalesPageState extends State<RequestSalesPage> {
         );
       },
     );
+  }
+
+  void onPressedCardList(RequestSalesCubit cubit, VisitData? data) async {
+    bool gpsStatus = await cubit.checkAndTurnOnGPS();
+
+    if (gpsStatus) {
+      Navigator.pushNamed(
+        context,
+        Routes.checkoutSales,
+        arguments: {
+          'data': data,
+          'isFromHome': false,
+        },
+      );
+    } else {
+      onPressedCardList(cubit, data);
+    }
   }
 
   Widget cardFilter({

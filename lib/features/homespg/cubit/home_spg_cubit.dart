@@ -30,8 +30,8 @@ class HomeSpgCubit extends Cubit<HomeSpgState> {
   String? radiusStore;
   double? radiusUser;
 
-
   String? photoProfile;
+  bool? isFakeLocation = false;
 
   List<DataStore> dataStores = [];
 
@@ -79,8 +79,6 @@ class HomeSpgCubit extends Cubit<HomeSpgState> {
 
     emit(HomeSpgLoaded());
   }
-
-  
 
   Future<void> checkRadiusStore() async {
     emit(HomeSpgLoading());
@@ -141,7 +139,6 @@ class HomeSpgCubit extends Cubit<HomeSpgState> {
     }
   }
 
-
   void saveImage({String? image}) {
     emit(HomeSpgLoading());
 
@@ -189,6 +186,11 @@ class HomeSpgCubit extends Cubit<HomeSpgState> {
 
     String jsonString = jsonEncode(dataMap);
 
+    if (imagePath != null) {
+      emit(const HomeSpgFailed(message: "Ambil foto terlebih dahulu !"));
+      return;
+    }
+
     var params = {
       'spg_name': dataSPG!.userName.toString(),
       'spg_id': dataSPG!.userId.toString(),
@@ -228,7 +230,8 @@ class HomeSpgCubit extends Cubit<HomeSpgState> {
       return;
     }
 
-
     emit(HomeSpgLoaded());
   }
+
+ 
 }

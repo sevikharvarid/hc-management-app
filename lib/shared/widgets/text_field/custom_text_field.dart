@@ -12,13 +12,16 @@ Widget buildTextField({
   bool? isReadOnly = false,
   String? Function(String?)? validator,
   Function(String)? onFieldSubmitted,
+  bool? enabled = true,
+  TextInputType? keyboardType,
 }) {
   return TextFormField(
+    enabled: enabled,
     controller: controller,
     maxLines: maxLines,
     obscureText: obscureText!,
     readOnly: isReadOnly!,
-    keyboardType: TextInputType.name,
+    keyboardType: keyboardType ?? TextInputType.name,
     onFieldSubmitted: onFieldSubmitted,
     style: GoogleFonts.roboto(
       fontSize: 12,

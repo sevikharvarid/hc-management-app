@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hc_management_app/shared/utils/constant/app_colors.dart';
 import 'package:hc_management_app/shared/utils/constant/size_utils.dart';
 import 'package:hc_management_app/shared/widgets/atom/spacer.dart';
 
 class VisitCardItem extends StatelessWidget {
-  final String? attendanceDate;
+  final String? attendanceDateIn;
+  final String? attendanceDateOut;
   final String? soNumber;
-  final String? typeAbsence;
-  final String? spgName;
   final String? storeName;
   final String? storeCode;
   final String? startDateTime;
@@ -16,10 +16,9 @@ class VisitCardItem extends StatelessWidget {
 
   const VisitCardItem({
     super.key,
-    this.attendanceDate,
+    this.attendanceDateIn,
+    this.attendanceDateOut,
     this.soNumber,
-    this.typeAbsence,
-    this.spgName,
     this.storeName,
     this.storeCode,
     this.startDateTime,
@@ -52,35 +51,53 @@ class VisitCardItem extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                attendanceDate!,
-                style: GoogleFonts.nunito(
-                  color: AppColors.black,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              const Spacer(),
               Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    storeCode ?? '',
+                    'Tgl In : ${attendanceDateIn!}',
                     style: GoogleFonts.nunito(
-                      color: AppColors.primary,
+                      color: AppColors.black,
                       fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                      fontSize: 11.sp,
                     ),
                   ),
                   Text(
-                    storeName ?? '',
+                    'Tgl Out : ${attendanceDateOut!}',
                     style: GoogleFonts.nunito(
-                      color: AppColors.primary,
+                      color: AppColors.black,
                       fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                      fontSize: 11.sp,
                     ),
                   ),
                 ],
+              ),
+              // const Spacer(),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      storeCode ?? '',
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.nunito(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      storeName ?? '',
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.nunito(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                        
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -91,7 +108,7 @@ class VisitCardItem extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.location_on,
-                    color: AppColors.redButton,
+                    color: AppColors.blue70,
                     size: 45,
                   ),
                   Column(
@@ -121,7 +138,7 @@ class VisitCardItem extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.location_on,
-                    color: AppColors.blue70,
+                    color: AppColors.redButton,
                     size: 45,
                   ),
                   Column(

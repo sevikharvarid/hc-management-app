@@ -19,6 +19,11 @@ class HomeSpgLoaded extends HomeSpgState {
   List<Object> get props => [];
 }
 
+class HomeSpgLocationDetected extends HomeSpgState {
+  @override
+  List<Object> get props => [];
+}
+
 class HomeSpgSuccessLoaded extends HomeSpgState {
   @override
   List<Object> get props => [];

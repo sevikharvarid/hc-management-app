@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
@@ -7,9 +8,13 @@ import 'package:equatable/equatable.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hc_management_app/config/service/background_service_init.dart';
 import 'package:hc_management_app/domain/model/stores.dart';
+import 'package:hc_management_app/domain/model/visits.dart';
+import 'package:hc_management_app/domain/service/data_response.dart';
 import 'package:hc_management_app/features/check_in/repository/check_in_repository.dart';
+import 'package:hc_management_app/features/profile/repository/profile_repository.dart';
 import 'package:hc_management_app/shared/utils/helpers/general_helpers.dart';
 import 'package:hc_management_app/shared/utils/preferences/preferences_key.dart';
+import 'package:http/http.dart' as http;
 
 part 'check_in_state.dart';
 
@@ -17,22 +22,35 @@ class CheckInCubit extends Cubit<CheckInState> {
   CheckInCubit() : super(CheckInInitial());
 
   CheckInRepository checkInRepository = CheckInRepository();
+  ProfileRepository profileRepository = ProfileRepository();
+
   GeneralHelper helpers = GeneralHelper();
 
   bool isChecked = false;
   bool isReadOnlyStore = false;
 
-  List<DataStore> listToko = [];
-  DataStore? dataStore;
+  List<DataStoreSales> listToko = [];
+  DataStoreSales? dataStore;
 
   Position? userPosition;
 
   File? imagePath;
+  late int? totalImage = 1;
+
+  List<File>? fileImages = [];
 
   void initCubit() async {
+    var params = await preferences.read(PreferencesKey.userId);
+
     emit(CheckInLoading());
 
     userPosition = await helpers.getCurrentPosition();
+    var response = await profileRepository.getProfile(params);
+
+    await getStoreData();
+
+    totalImage = response.data['total_image'];
+    log("response : $totalImage");
 
     emit(CheckInLoaded());
   }
@@ -46,33 +64,58 @@ class CheckInCubit extends Cubit<CheckInState> {
 
     Position position = await generalHelper.getCurrentPosition();
 
+    String userId = await preferences.read(PreferencesKey.userId);
+    String userName = await preferences.read(PreferencesKey.name);
+
     String userLogin = await preferences.read(PreferencesKey.userLogin);
     userLogin = userLogin.replaceAll('{', '').replaceAll('}', '');
 
-    Map<String, dynamic> dataMap =
-        Map.fromEntries(userLogin.split(',').map((entry) {
-      final parts = entry.trim().split(':');
-      final key = parts[0].trim();
-      final value = parts[1].trim();
-      return MapEntry(key, value);
-    }));
+    // Convert Map to UserLogin object
+    // UserLogin users = UserLogin.fromJson(dataMap);
+    UserLogin users = UserLogin(
+      userId: userId,
+      userName: userName,
+      userType: 'sales',
+    );
 
-    String jsonString = jsonEncode(dataMap);
     int storeId = 0;
 
+    log("item storeeCode : $storeCode");
+    log("item storeName : $storeName");
+
     for (var item in listToko) {
-      if (item.code == storeCode) {
-        storeId = item.id;
+      log("item element : $item");
+      if (item.storeCode == storeCode) {
+        storeId = item.storeId;
       }
     }
 
     //Other toko store_id di isi null
     //store_code 'other'
+    String? idStore;
+    String? codeStore;
+
+    if (storeCode == null || storeCode.isEmpty) {
+      idStore = '0';
+      codeStore = 'other';
+      log("masuk ke sini ?");
+    } else {
+      log("atau masuk ke sini ?");
+
+      idStore = storeId.toString();
+      codeStore = storeCode;
+    }
+
+    List<String> images = [];
+
+    for (var item in fileImages!) {
+      images.add(item.path);
+    }
+
     var params = {
-      'store_id': storeId.toString(),
+      'store_id': idStore,
       'store_name': storeName,
-      'store_type': 'type', //Tidak perlu
-      //store_code : 'other'
+      'store_code': codeStore,
       'note': notes,
       'in_date': generalHelper.convertDateToString(
           dateTime: DateTime.now(), dateFormat: "yyyy-MM-dd"),
@@ -80,36 +123,44 @@ class CheckInCubit extends Cubit<CheckInState> {
           dateTime: DateTime.now(), dateFormat: "HH:mm"),
       'in_lat': position.latitude.toString(),
       'in_long': position.longitude.toString(),
-      // 'out_date': generalHelper.convertDateToString(
-      //     dateTime: DateTime.now(), dateFormat: "yyyy-MM-dd"),
-      // 'out_time': generalHelper.convertDateToString(
-      //     dateTime: DateTime.now(), dateFormat: "HH:mm"),
-      // 'out_lat': position.latitude.toString(),
-      // 'out_long': position.longitude.toString(),
-      'user_login': jsonString,
-      'image': imagePath!.path,
+      'user_login': jsonEncode(users.toJson()),
+      'user_id': userId,
     };
 
-    final response = await checkInRepository.postSubmitData(params);
+
+    final response =
+        await checkInRepository.postSubmitData(params, 'in', null, images);
     log("response is : $response");
+
+    if (response.status == Status.success) {
+      emit(CheckInSuccess());
+      return;
+    }
+
+    if (response.status == Status.error) {
+      emit(const CheckInFailed());
+      return;
+    }
 
     emit(CheckInLoaded());
   }
 
+  void saveImage(List<File>? files) {
+    // Inisialisasi atau reset fileImages menjadi daftar kosong setiap kali fungsi dipanggil
+    fileImages = [];
 
-  void saveImage(List<File>? imageValue) {
-    if (imageValue!.isNotEmpty) {
-      imagePath = imageValue.first;
-    } else {
-      imagePath = null;
+    if (files != null && files.isNotEmpty) {
+      for (var i in files) {
+        fileImages!.add(i);
+      }
     }
 
+    log("images : $fileImages");
+
     emit(CheckInSpgImageSaved(
-      imagePath: imagePath,
+      imagePath: fileImages,
     ));
   }
-
-  
 
   void setCheckBox(bool? value) async {
     isChecked = value!;
@@ -131,19 +182,53 @@ class CheckInCubit extends Cubit<CheckInState> {
     ));
   }
 
-  void getStoreData() async {
+  FutureOr<void> getStoreData() async {
     emit(CheckInFilterLoading());
 
     var userId = await preferences.read(PreferencesKey.userId);
 
     var params = userId;
-    
+
     final response = await checkInRepository.getStoreData(params);
+
     final List<dynamic> responseData = response.data['data'];
 
     listToko =
-        responseData.map((item) => DataStore.fromJson(item)).toList();
+        responseData.map((item) => DataStoreSales.fromJson(item)).toList();
 
     emit(CheckInFilterLoaded());
+  }
+}
+
+class CheckInService {
+  Future<dynamic> sendVisitData({
+    dynamic body,
+    List<String>? imagePath,
+  }) async {
+    var request = http.MultipartRequest(
+        'POST', Uri.parse('https://visit.sanwin.my.id/api/visits'));
+
+    request.fields.addAll({
+      'store_id': body['store_id'],
+      'store_name': body['store_name'],
+      'store_code': body['store_code'],
+      'note': body['note'],
+      'in_date': body['in_date'],
+      'in_time': body['in_time'],
+      'in_lat': body['in_lat'],
+      'in_long': body['in_long'],
+      'user_login': body['user_login'],
+      'user_id': body['user_id'],
+    });
+
+    for (var image in imagePath!) {
+      request.files.add(await http.MultipartFile.fromPath('image[]', image));
+    }
+
+    http.StreamedResponse response = await request.send();
+    log("response is : ${await response.stream.bytesToString()}");
+    String responseBody = await response.stream.bytesToString();
+    Map<String, dynamic> responseMap = jsonDecode(responseBody);
+    return responseMap;
   }
 }

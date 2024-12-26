@@ -24,7 +24,6 @@ class _ProfileSPGPageState extends State<ProfileSPGPage> {
   final password = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<ProfileSPGCubit>();
@@ -80,7 +79,7 @@ class _ProfileSPGPageState extends State<ProfileSPGPage> {
                             width: SizeUtils.baseWidthHeight110,
                             height: SizeUtils.baseWidthHeight110,
                             imageUrl:
-                                "http://103.140.34.220:280/storage/storage/${cubit.photoProfile}",
+                                "https://visit.sanwin.my.id/storage/storage/${cubit.photoProfile}",
                             boxFit: BoxFit.cover,
                           ),
                         )
@@ -103,7 +102,6 @@ class _ProfileSPGPageState extends State<ProfileSPGPage> {
                     ),
                   ],
                 ),
-               
                 const SizedBox(
                   height: 35,
                 ),
@@ -128,87 +126,88 @@ class _ProfileSPGPageState extends State<ProfileSPGPage> {
                         title: cubit.notes ?? '',
                       ),
                     ),
-                    Container(
-                      margin:
-                          EdgeInsets.symmetric(horizontal: 16.w, vertical: 2.h),
-                      child: CustomCardItem(
-                        widgetIcon: const Icon(Icons.exit_to_app),
-                        title: 'Logout',
-                        onTap: () {
-                          showMessage(context, "Anda yakin ingin logout ?");
-                          // showDialog(
-                          //   barrierDismissible: false,
-                          //   context: context,
-                          //   builder: (BuildContext context) {
-                          //     return BlocProvider(
-                          //       create: (context) => ProfileSPGCubit(),
-                          //       child: BlocBuilder<ProfileSPGCubit,
-                          //           ProfileSPGState>(
-                          //         builder: (context, state) {
-                          //           final cubitDialog =
-                          //               context.read<ProfileSPGCubit>();
-                          //           return Form(
-                          //             key: _formKey,
-                          //             child: AlertDialog(
-                          //               title: const Text('Ubah password'),
-                          //               content: buildTextField(
-                          //                 controller: password,
-                          //                 hintText: "Masukkan Password",
-                          //                 label: "Password",
-                          //                 suffixIcon: IconButton(
-                          //                   onPressed: () =>
-                          //                       cubitDialog.setVisibile(),
-                          //                   icon: Icon(
-                          //                     cubitDialog.isVisible!
-                          //                         ? Icons.visibility_off
-                          //                         : Icons.visibility,
-                          //                   ),
-                          //                 ),
-                          //                 obscureText: !cubitDialog.isVisible!,
-                          //                 validator: (value) {
-                          //                   if (value!.length < 8) {
-                          //                     return "Password harus lebih dari 8 karakter";
-                          //                   }
-                          //                   return null;
-                          //                 },
-                          //               ),
-                          //               actions: <Widget>[
-                          //                 TextButton(
-                          //                   onPressed: () {
-                          //                     if (password.text.isNotEmpty) {
-                          //                       if (_formKey.currentState!
-                          //                           .validate()) {
-                          //                         Navigator.of(context).pop();
+                    if (cubit.logoutStatus == 1)
+                      Container(
+                        margin: EdgeInsets.symmetric(
+                            horizontal: 16.w, vertical: 2.h),
+                        child: CustomCardItem(
+                          widgetIcon: const Icon(Icons.exit_to_app),
+                          title: 'Logout',
+                          onTap: () {
+                            showMessage(context, "Anda yakin ingin logout ?");
+                            // showDialog(
+                            //   barrierDismissible: false,
+                            //   context: context,
+                            //   builder: (BuildContext context) {
+                            //     return BlocProvider(
+                            //       create: (context) => ProfileSPGCubit(),
+                            //       child: BlocBuilder<ProfileSPGCubit,
+                            //           ProfileSPGState>(
+                            //         builder: (context, state) {
+                            //           final cubitDialog =
+                            //               context.read<ProfileSPGCubit>();
+                            //           return Form(
+                            //             key: _formKey,
+                            //             child: AlertDialog(
+                            //               title: const Text('Ubah password'),
+                            //               content: buildTextField(
+                            //                 controller: password,
+                            //                 hintText: "Masukkan Password",
+                            //                 label: "Password",
+                            //                 suffixIcon: IconButton(
+                            //                   onPressed: () =>
+                            //                       cubitDialog.setVisibile(),
+                            //                   icon: Icon(
+                            //                     cubitDialog.isVisible!
+                            //                         ? Icons.visibility_off
+                            //                         : Icons.visibility,
+                            //                   ),
+                            //                 ),
+                            //                 obscureText: !cubitDialog.isVisible!,
+                            //                 validator: (value) {
+                            //                   if (value!.length < 8) {
+                            //                     return "Password harus lebih dari 8 karakter";
+                            //                   }
+                            //                   return null;
+                            //                 },
+                            //               ),
+                            //               actions: <Widget>[
+                            //                 TextButton(
+                            //                   onPressed: () {
+                            //                     if (password.text.isNotEmpty) {
+                            //                       if (_formKey.currentState!
+                            //                           .validate()) {
+                            //                         Navigator.of(context).pop();
 
-                          //                         password.clear();
-                          //                       }
-                          //                     } else {
-                          //                       Navigator.of(context).pop();
-                          //                     }
-                          //                   },
-                          //                   child: Text(
-                          //                     "Tutup",
-                          //                     textAlign: TextAlign.center,
-                          //                     style: GoogleFonts.nunito(
-                          //                       fontSize: 14,
-                          //                       color: AppColors.black80,
-                          //                       fontWeight: FontWeight.w400,
-                          //                     ),
-                          //                   ),
-                          //                 ),
-                          //               ],
-                          //             ),
-                          //           );
-                          //         },
-                          //       ),
-                          //     );
-                          //   },
-                          // );
-                          // showMessage(
-                          // context, "Silahkan logout terlebih dahulu");
-                        },
+                            //                         password.clear();
+                            //                       }
+                            //                     } else {
+                            //                       Navigator.of(context).pop();
+                            //                     }
+                            //                   },
+                            //                   child: Text(
+                            //                     "Tutup",
+                            //                     textAlign: TextAlign.center,
+                            //                     style: GoogleFonts.nunito(
+                            //                       fontSize: 14,
+                            //                       color: AppColors.black80,
+                            //                       fontWeight: FontWeight.w400,
+                            //                     ),
+                            //                   ),
+                            //                 ),
+                            //               ],
+                            //             ),
+                            //           );
+                            //         },
+                            //       ),
+                            //     );
+                            //   },
+                            // );
+                            // showMessage(
+                            // context, "Silahkan logout terlebih dahulu");
+                          },
+                        ),
                       ),
-                    ),
                     const SizedBox(
                       height: 10,
                     ),

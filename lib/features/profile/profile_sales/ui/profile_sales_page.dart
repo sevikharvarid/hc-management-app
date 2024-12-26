@@ -81,7 +81,7 @@ class _ProfileSalesPageState extends State<ProfileSalesPage> {
                             width: SizeUtils.baseWidthHeight110,
                             height: SizeUtils.baseWidthHeight110,
                             imageUrl:
-                                "http://103.140.34.220:280/storage/storage/${cubit.photoProfile}",
+                                "https://visit.sanwin.my.id/storage/storage/${cubit.photoProfile}",
                             boxFit: BoxFit.cover,
                           ),
                         )
@@ -130,6 +130,7 @@ class _ProfileSalesPageState extends State<ProfileSalesPage> {
                         title: cubit.notes ?? '',
                       ),
                     ),
+                    if (cubit.logoutStatus == 1)
                     Container(
                       margin:
                           EdgeInsets.symmetric(horizontal: 16.w, vertical: 2.h),

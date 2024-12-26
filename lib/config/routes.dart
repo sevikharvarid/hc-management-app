@@ -12,4 +12,5 @@ class Routes {
 
   //
   static const String checkoutSales = "/checkout-sales";
+  static const String orderOnly = "/orderonly-sales";
 }

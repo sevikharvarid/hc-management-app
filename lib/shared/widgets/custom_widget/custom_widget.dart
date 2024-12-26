@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hc_management_app/shared/utils/constant/app_colors.dart';
 import 'package:hc_management_app/shared/utils/constant/size_utils.dart';
@@ -15,7 +16,6 @@ import 'package:hc_management_app/shared/widgets/image/image_memory_rectangle.da
 import 'package:hc_management_app/shared/widgets/image/image_network_rectangle.dart';
 import 'package:hc_management_app/shared/widgets/image/image_svg_asset_rectangle.dart';
 
-
 Widget customHorizontalDivider({
   double? height,
   Color? color,
@@ -27,7 +27,6 @@ Widget customHorizontalDivider({
     thickness: thickness,
   );
 }
-
 
 showDetailImage({
   required BuildContext? context,
@@ -404,7 +403,7 @@ AppBar customAppBar({
 }) {
   return AppBar(
     // centerTitle: true,
-    backgroundColor: AppColors.transparent,
+    backgroundColor: AppColors.primary,
     iconTheme: IconThemeData(color: AppColors.black),
     leading: leading,
     systemOverlayStyle: systemUiOverlayStyle ?? SystemUiOverlayStyle.dark,
@@ -414,8 +413,9 @@ AppBar customAppBar({
         Text(
           title!,
           style: GoogleFonts.nunito(
-            fontWeight: FontWeight.w500,
-            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            fontSize: 17.sp,
+            color: AppColors.white,
           ),
         ),
         spaceHeight(
@@ -426,6 +426,7 @@ AppBar customAppBar({
           style: GoogleFonts.nunito(
             fontWeight: FontWeight.w500,
             fontSize: 12,
+            color: AppColors.white,
           ),
         ),
       ],

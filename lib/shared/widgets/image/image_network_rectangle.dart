@@ -1,6 +1,7 @@
 library custom_image;
 
 import 'package:flutter/material.dart';
+import 'package:hc_management_app/shared/utils/constant/app_colors.dart';
 import 'package:hc_management_app/shared/widgets/dropdown/dropdown_with_search.dart';
 
 class ImageNetworkRectangle extends StatefulWidget {
@@ -39,6 +40,12 @@ class ImageNetworkRectangleState extends State<ImageNetworkRectangle> {
             (BuildContext context, Widget child, ImageChunkEvent? loading) {
           if (loading == null) return child;
           return loadingProgress();
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return Icon(
+            Icons.person,
+            color: AppColors.black,
+          );
         },
       ),
     );

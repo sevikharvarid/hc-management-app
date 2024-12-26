@@ -1,24 +1,33 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hc_management_app/config/routes.dart';
+import 'package:hc_management_app/domain/model/stores.dart';
+import 'package:hc_management_app/domain/model/visits.dart';
 import 'package:hc_management_app/features/check_in/ui/check_in_page.dart';
 import 'package:hc_management_app/features/home/cubit/home_cubit.dart';
 import 'package:hc_management_app/shared/utils/constant/app_colors.dart';
 import 'package:hc_management_app/shared/utils/constant/size_utils.dart';
 import 'package:hc_management_app/shared/utils/helpers/general_helpers.dart';
+import 'package:hc_management_app/shared/widgets/alert/progress_dialog.dart';
 import 'package:hc_management_app/shared/widgets/atom/spacer.dart';
 import 'package:hc_management_app/shared/widgets/button/custom_button.dart';
 import 'package:hc_management_app/shared/widgets/card/visit_cart_item.dart';
 import 'package:hc_management_app/shared/widgets/custom_widget/custom_loading.dart';
+import 'package:hc_management_app/shared/widgets/dropdown/dropdown_with_search.dart';
+import 'package:hc_management_app/shared/widgets/image/image_lottie.dart';
 import 'package:hc_management_app/shared/widgets/image/image_network_rectangle.dart';
+import 'package:hc_management_app/shared/widgets/text_field/custom_text_field.dart';
+import 'package:hc_management_app/shared/widgets/text_field/input_text_field_default.dart';
 import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
-
   final VoidCallback? onClickViewAll;
 
   const HomePage({
@@ -31,6 +40,13 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  //Field Pop up toko
+  TextEditingController namaToko = TextEditingController();
+  TextEditingController storeController = TextEditingController();
+  TextEditingController searchController = TextEditingController();
+  ScrollController scrollFilterController = ScrollController();
+
+
   final ScrollController _scrollController = ScrollController();
   bool _changeColor = false;
 
@@ -78,7 +94,18 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final cubit = context.read<HomeCubit>();
     return BlocConsumer<HomeCubit, HomeState>(
-      listener: (context, state) {},
+      listener: (context, state) {
+        if (state is HomeLoading) {
+          showProgressDialog(context: context);
+        }
+
+        if (state is HomeLoaded) {
+          Navigator.pop(context);
+          cubit.checkGPS();
+        }
+
+        if (state is HomeSuccessGet) {}
+      },
       builder: (context, state) {
         return Scaffold(
           body: Stack(
@@ -150,7 +177,7 @@ class _HomePageState extends State<HomePage> {
                                       width: SizeUtils.baseWidthHeight110,
                                       height: SizeUtils.baseWidthHeight110,
                                       imageUrl:
-                                          "http://103.140.34.220:280/storage/storage/${cubit.photoProfile}",
+                                          "https://visit.sanwin.my.id/storage/storage/${cubit.photoProfile}",
                                       boxFit: BoxFit.cover,
                                     ),
                                   )
@@ -171,8 +198,7 @@ class _HomePageState extends State<HomePage> {
                       [
                         spaceHeight(height: 20),
                         header(cubit),
-                        buildMenu(
-                        ),
+                        buildMenu(),
                         spaceHeight(height: SizeUtils.basePaddingMargin8),
                         Container(
                           margin: const EdgeInsets.symmetric(horizontal: 18),
@@ -192,7 +218,6 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                               GestureDetector(
-                              
                                 onTap: () {
                                   widget.onClickViewAll!.call();
                                 },
@@ -210,33 +235,71 @@ class _HomePageState extends State<HomePage> {
                             ],
                           ),
                         ),
-                        ListView.separated(
-                          padding: const EdgeInsets.only(top: 4, bottom: 20),
-                          physics: const NeverScrollableScrollPhysics(),
-                          shrinkWrap: true,
-                          itemCount: 3,
-                          separatorBuilder: (context, index) => const SizedBox(
-                              height: SizeUtils.basePaddingMargin2),
-                          itemBuilder: (context, index) {
-                            return GestureDetector(
-                              onTap: () {
-                                Navigator.pushNamed(
-                                    context, Routes.checkoutSales);
-                              },
-                              child: const VisitCardItem(
-                                attendanceDate: "Wed, 17 Jan 2024",
-                                startDateTime: "08:59",
-                                endDateTime: "10:20",
-                                typeAbsence: "in",
-                                spgName: "Wahyu",
-                                storeName: "Toko sejahtera Abadi",
-                                storeCode: "KD01",
-                                soNumber: "S0XXXXX9",
-                                // endDayTime: "18:00",
+                        cubit.visits.isEmpty
+                            ? Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const ImageLottie(
+                                    lottiePath: "assets/jsons/empty_data.json",
+                                    width: SizeUtils.baseWidthHeight214,
+                                    height: SizeUtils.baseWidthHeight214,
+                                  ),
+                                  Text(
+                                    "Data tidak di temukan",
+                                    style: GoogleFonts.nunito(
+                                      fontWeight: FontWeight.w400,
+                                      color: AppColors.black,
+                                      fontSize: 20,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : ListView.separated(
+                                padding:
+                                    const EdgeInsets.only(top: 4, bottom: 20),
+                                physics: const NeverScrollableScrollPhysics(),
+                                shrinkWrap: true,
+                                itemCount: cubit.visits.isEmpty
+                                    ? 0
+                                    : (cubit.visits.length > 3)
+                                        ? 3
+                                        : cubit.visits.length,
+                                separatorBuilder: (context, index) =>
+                                    const SizedBox(
+                                        height: SizeUtils.basePaddingMargin2),
+                                itemBuilder: (context, index) {
+                                  var data = cubit.visits[index];
+
+                                  // log("totalQ")
+
+                                  return GestureDetector(
+                                    onTap: () => onPressedCardList(cubit, data),
+                                    child: VisitCardItem(
+                                      attendanceDateIn: data.inDate != null
+                                          ? cubit.generalHelper
+                                              .convertDateToString(
+                                              dateFormat: "EEEE, dd MMMM yyyy",
+                                              dateTime:
+                                                  DateTime.parse(data.inDate!),
+                                            )
+                                          : '-',
+                                      attendanceDateOut: data.outDate != null
+                                          ? cubit.generalHelper
+                                              .convertDateToString(
+                                              dateFormat: "EEEE, dd MMMM yyyy",
+                                              dateTime:
+                                                  DateTime.parse(data.outDate!),
+                                            )
+                                          : '-',
+                                      startDateTime: data.inTime,
+                                      endDateTime: data.outTime ?? '-',
+                                      storeName: data.storeName ?? '-',
+                                      storeCode: data.storeCode ?? '-',
+                                      soNumber: data.soCode ?? '-',
+                                    ),
+                                  );
+                                },
                               ),
-                            );
-                          },
-                        ),
                       ],
                     ),
                   ),
@@ -333,7 +396,60 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void onPressedCheckIn(HomeCubit cubit) async {
+    bool gpsStatus = await cubit.checkAndTurnOnGPS();
+
+    if (gpsStatus) {
+      Navigator.push(
+        context,
+        CupertinoPageRoute(
+          builder: (_) => const CheckInPage(),
+        ),
+      );
+    } else {
+      onPressedCheckIn(cubit);
+    }
+  }
+
+  void onPressedOrderOnly(HomeCubit cubit) async {
+    bool gpsStatus = await cubit.checkAndTurnOnGPS();
+
+    if (gpsStatus) {
+      Navigator.pushNamed(
+        context,
+        Routes.orderOnly,
+        arguments: {
+          'data': null,
+        },
+      );
+    } else {
+      onPressedOrderOnly(
+        cubit,
+      );
+    }
+  }
+
+  void onPressedCardList(HomeCubit cubit, VisitData? data) async {
+    bool gpsStatus = await cubit.checkAndTurnOnGPS();
+
+    log("DATA GEDE BANGET :${const JsonEncoder.withIndent(' ').convert(data)}");
+
+    if (gpsStatus) {
+      Navigator.pushNamed(
+        context,
+        Routes.checkoutSales,
+        arguments: {
+          'data': data,
+          'isFromHome': false,
+        },
+      );
+    } else {
+      onPressedCardList(cubit, data);
+    }
+  }
+
   Widget buildMenu() {
+    var cubit = context.read<HomeCubit>();
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 16),
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
@@ -368,14 +484,7 @@ class _HomePageState extends State<HomePage> {
                   AppColors.purple,
                 ),
                 title: "Check In",
-                action: () {
-                  Navigator.push(
-                    context,
-                    CupertinoPageRoute(
-                      builder: (_) => const CheckInPage(),
-                    ),
-                  );
-                },
+                action: () => onPressedCheckIn(cubit),
                 withIcon: false,
                 active: true,
               ),
@@ -395,7 +504,8 @@ class _HomePageState extends State<HomePage> {
                   AppColors.green,
                 ),
                 title: "Order Only",
-                action: () {},
+                // action: () => onPressedOrderOnly(cubit),
+                action: () => showPopup(context, cubit),
                 withIcon: false,
                 active: true,
               ),
@@ -430,6 +540,216 @@ class _HomePageState extends State<HomePage> {
       //     width: SizeUtils.basePaddingMargin30,
       //   ),
       // ),
+    );
+  }
+
+  void showPopup(BuildContext context, HomeCubit cubit) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Pilih Toko'),
+          // content: const Text('This is the content of the pop-up!'),
+          content: Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.only(
+                    left: 16, top: 12, bottom: 12, right: 24),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      height: 70,
+                      width: 100,
+                      child: Column(
+                        children: [
+                          Checkbox(
+                            value: cubit.isChecked,
+                            onChanged: (value) {
+                              cubit.setCheckBox(value);
+                            },
+                          ),
+                          Text(
+                            "Other Toko",
+                            style: GoogleFonts.nunito(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Visibility(
+                      visible: !cubit.isChecked,
+                      child: Expanded(
+                        child: DropdownWithSearchWidget(
+                          width: MediaQuery.of(context).size.width,
+                          height: SizeUtils.baseWidthHeight48,
+                          searchController: storeController,
+                          textHint: "Pilih Toko",
+                          bottomSheetLabel: "Pilih Toko",
+                          onTap: () {
+                            showStoreList(context, cubit);
+                          },
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                child: buildTextField(
+                  isReadOnly: !cubit.isReadOnlyStore,
+                  controller: namaToko,
+                  hintText: "Masukkan Nama Toko",
+                  label: "Nama Toko",
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<dynamic> showStoreList(
+    BuildContext context,
+    HomeCubit cubit,
+  ) {
+    // variable like initState() or initCubit
+    // todo jump to value data
+
+    // todo show dropdown
+    return showModalBottomSheet(
+      context: context,
+      enableDrag: false,
+      isScrollControlled: true,
+      barrierColor: AppColors.grey600?.withOpacity(0.6),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(SizeUtils.baseRoundedCorner),
+          topRight: Radius.circular(SizeUtils.baseRoundedCorner),
+        ),
+      ),
+      builder: (context) {
+        return BlocProvider<HomeCubit>(
+          create: (context) => HomeCubit()..getStoreData(),
+          child: BlocBuilder<HomeCubit, HomeState>(
+            builder: (context, state) {
+              var cubitDropdown = context.read<HomeCubit>();
+
+              List<DataStoreSales> listToko = [];
+
+              listToko.addAll(cubitDropdown.listToko);
+
+              return openDropdownMenuWithSearch(
+                context: context,
+                searchController: searchController,
+                scrollController: scrollFilterController,
+                searchHint: "Pilih Toko",
+                emptyMessage: "Data kosong",
+                bottomSheetTitle: "Pilih Toko",
+                itemCount: (state is HomeStoreFilterLoading)
+                    ? 5
+                    : listToko.isNotEmpty
+                        ? (listToko.length == 1)
+                            ? 1
+                            : listToko.length
+                        : 0,
+                itemBuilder: (BuildContext context, int index) {
+                  if (state is HomeStoreFilterLoading) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: SizeUtils.basePaddingMargin10,
+                        horizontal: SizeUtils.basePaddingMargin16,
+                      ),
+                      child: CustomLoading.defaultShape(
+                        heightLoading: SizeUtils.baseWidthHeight12,
+                      ),
+                    );
+                  }
+
+                  var toko = listToko[index];
+                  var fontWeight = FontWeight.w400;
+                  var color = AppColors.transparent;
+
+                  if (storeController.text == toko) {
+                    fontWeight = FontWeight.w500;
+                    color = AppColors.shadeBlue;
+                  }
+
+                  return InkWell(
+                    highlightColor: AppColors.shadeBlue,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: SizeUtils.basePaddingMargin10,
+                        horizontal: SizeUtils.basePaddingMargin16,
+                      ),
+                      color: color,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "${toko.storeCode} - ${toko.storeName}",
+                            style: GoogleFonts.nunito(
+                              fontWeight: fontWeight,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    onTap: () {
+                      FocusScope.of(context).unfocus();
+                      storeController.text = toko.storeCode;
+                      namaToko.text = toko.storeName;
+                      cubit.dataStore = toko;
+
+                      searchController.clear();
+                      Navigator.pop(context);
+                      // cubit.validateInformationStep(
+                      //   odometer: odometerController.text,
+                      //   location: storeController.text,
+                      // );
+                    },
+                  );
+                },
+                searchWidget: Container(
+                  margin: const EdgeInsets.all(
+                    SizeUtils.basePaddingMargin16,
+                  ),
+                  child: InputTextFieldDefault(
+                    hint: "Cari Toko",
+                    inputType: TextInputType.text,
+                    height: SizeUtils.baseWidthHeight44,
+                    hintFontSize: SizeUtils.baseWidthHeight14,
+                    controller: searchController,
+                    onChanged: (String value) {
+                      // cubitDropdown.changeIconToClose(value);
+                      // cubitDropdown.filterLocation(location: value);
+                    },
+                    onEditComplete: () {
+                      FocusScope.of(context).unfocus();
+                    },
+                    inputFormatter: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'[a-zA-Z0-9./_, -]'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

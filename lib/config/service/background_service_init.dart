@@ -16,7 +16,7 @@ GeneralHelper generalHelper = GeneralHelper();
 Future<void> postLocation() async {
   var headers = {'Content-Type': 'application/json'};
 
-  var url = Uri.parse('http://103.140.34.220:280/api/locations');
+  var url = Uri.parse('https://visit.sanwin.my.id/api/locations');
 
   String userId = await preferences.read(PreferencesKey.userId);
   Position position = await generalHelper.getCurrentPosition();
@@ -27,8 +27,8 @@ Future<void> postLocation() async {
   var locationData = json.encode(
     {
       "user_id": int.parse(userId),
-      "latt": "-6.2259782759986315",
-      "long": "107.00108712484398",
+      "latt": position.latitude.toString(),
+      "long": position.longitude.toString(),
     },
   );
 
@@ -52,7 +52,7 @@ Future<void> getLocations() async {
   log("user id is : $userId");
 
   var url =
-      Uri.parse('http://103.140.34.220:280/api/intervals?user_id=$userId');
+      Uri.parse('https://visit.sanwin.my.id/api/intervals?user_id=$userId');
 
   try {
     var response = await http.get(url);
@@ -87,8 +87,14 @@ Future<void> getLocations() async {
 void onStart(ServiceInstance service) async {
   DartPluginRegistrant.ensureInitialized();
 
-  log("mulai di sini");
+  running();
+ 
+  service.on('stopService').listen((event) {
+    service.stopSelf();
+  });
+}
 
+void running() async {
   String? intervalSeconds =
       await preferences.read(PreferencesKey.interval) ?? '5';
 
@@ -99,16 +105,17 @@ void onStart(ServiceInstance service) async {
         await preferences.read(PreferencesKey.interval);
 
     // Jika interval baru tersedia, perbarui nilai intervalSeconds
+
     if (newIntervalSeconds != null) {
+      if (intervalSeconds != newIntervalSeconds) {
+        timer.cancel();
+        running();
+      }
       intervalSeconds = newIntervalSeconds;
       log("Interval updated: $intervalSeconds");
+      postLocation();
     }
-
-    // Lakukan pengecekan terhadap user ID di sini
-    // if (userIdIsAvailable()) {
-    //   log("User ID is available, posting location...");
-    //   postLocation();
-    // }
+   
   });
 }
 
@@ -142,4 +149,11 @@ class BackgroundService {
     );
     await service.startService();
   }
+
+  // Future stop() async {
+  //   final service = FlutterBackgroundService();
+  //   service.on('stopService').listen((event) {
+  //     service.stopSelf();
+  //   });
+  // }
 }

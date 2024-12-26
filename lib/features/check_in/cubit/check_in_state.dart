@@ -19,6 +19,19 @@ class CheckInLoaded extends CheckInState {
   List<Object> get props => [];
 }
 
+class CheckInFailed extends CheckInState {
+  final String? message;
+
+  const CheckInFailed({this.message});
+  @override
+  List<Object> get props => [message!];
+}
+
+class CheckInSuccess extends CheckInState {
+  @override
+  List<Object> get props => [];
+}
+
 class CheckInChecklistStore extends CheckInState {
   final bool? state;
 
@@ -49,7 +62,7 @@ class CheckInFilterLoaded extends CheckInState {
 
 
 class CheckInSpgImageSaved extends CheckInState {
-  final File? imagePath;
+  final List<File>? imagePath;
 
   const CheckInSpgImageSaved({this.imagePath});
 

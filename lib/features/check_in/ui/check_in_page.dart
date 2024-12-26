@@ -7,7 +7,9 @@ import 'package:hc_management_app/domain/model/stores.dart';
 import 'package:hc_management_app/features/check_in/cubit/check_in_cubit.dart';
 import 'package:hc_management_app/shared/utils/constant/app_colors.dart';
 import 'package:hc_management_app/shared/utils/constant/size_utils.dart';
+import 'package:hc_management_app/shared/widgets/alert/custom_bottom_sheet.dart';
 import 'package:hc_management_app/shared/widgets/alert/progress_dialog.dart';
+import 'package:hc_management_app/shared/widgets/alert/toast_widget.dart';
 import 'package:hc_management_app/shared/widgets/atom/spacer.dart';
 import 'package:hc_management_app/shared/widgets/button/custom_button.dart';
 import 'package:hc_management_app/shared/widgets/custom_widget/custom_loading.dart';
@@ -33,20 +35,43 @@ class _CheckInPageState extends State<CheckInPage> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => CheckInCubit(),
+      create: (context) => CheckInCubit()..initCubit(),
       child: BlocConsumer<CheckInCubit, CheckInState>(
         listener: (context, state) {
           if (state is CheckInLoading) {
             showProgressDialog(
               context: context,
-              isDismissible: true,
             );
+          }
+
+          if (state is CheckInFailed) {
+            Navigator.pop(context);
+            showMessage(
+                context: context, message: 'Pengajuan Check In Anda Gagal');
+          }
+
+          if (state is CheckInSuccess) {
+            Navigator.pop(context);
+
+            showToast(
+              context: context,
+              child: ToastWidget(
+                borderColor: AppColors.green,
+                backgroundColor: AppColors.green.withOpacity(0.2),
+                message: "Pengajuan Check In Berhasil",
+                lineHeight: SizeUtils.baseLineText1,
+                icon: 'assets/icons/ic_caution_blue.svg',
+              ),
+            );
+          }
+
+          if (state is CheckInSuccess) {
+            Navigator.pushNamedAndRemoveUntil(
+                context, Routes.mainSales, (route) => false);
           }
 
           if (state is CheckInLoaded) {
             Navigator.pop(context);
-            Navigator.pushNamedAndRemoveUntil(
-                context, Routes.mainSales, (route) => false);
           }
         },
         builder: (context, state) {
@@ -133,40 +158,6 @@ class _CheckInPageState extends State<CheckInPage> {
                       label: "Nama Toko",
                     ),
                   ),
-                  // Container(
-                  //   margin: const EdgeInsets.only(
-                  //       left: 16, top: 12, bottom: 12, right: 24),
-                  //   child: Row(
-                  //     children: [
-                  //       Expanded(
-                  //         flex: 3,
-                  //         child: Container(
-                  //           padding: const EdgeInsets.only(
-                  //               left: 8, top: 8, bottom: 8, right: 16),
-                  //           child: CustomDropdownMenu(
-                  //             labelText: "Pilihan Absen",
-                  //             options: const [
-                  //               "Kunjungan",
-                  //               "Terima tagihan",
-                  //               "Tukar faktur",
-                  //             ],
-                  //             onChanged: (String newValue) {
-                  //               log('Selected option: $newValue');
-                  //             },
-                  //           ),
-                  //         ),
-                  //       ),
-                  //       Expanded(
-                  //         flex: 2,
-                  //         child: buildTextField(
-                  //           controller: nikSales,
-                  //           hintText: "Masukkan Nik",
-                  //           label: "NIK",
-                  //         ),
-                  //       )
-                  //     ],
-                  //   ),
-                  // ),
                   Container(
                     margin:
                         const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
@@ -189,11 +180,15 @@ class _CheckInPageState extends State<CheckInPage> {
                       height: SizeUtils.baseWidthHeight100,
                       label: "Upload Gambar",
                       accessibilityId: "Ac",
+                      quality: 15,
                       imageName: "Image Gambar",
                       mandatory: true,
                       minimumImage: 1,
-                      maximumImage: 1,
-                      imagePickerType: ImagePickerTypeEnum.single,
+                      maximumImage:
+                          cubit.totalImage == 1 ? 1 : cubit.totalImage,
+                      imagePickerType: cubit.totalImage == 1
+                          ? ImagePickerTypeEnum.single
+                          : ImagePickerTypeEnum.multiple,
                       pickedImage: const [],
                       onImageChanged: (value) {
                         cubit.saveImage(value);
@@ -210,12 +205,19 @@ class _CheckInPageState extends State<CheckInPage> {
                       ),
                       title: "Kirim Data",
                       action: () async {
-                        cubit.postData(
-                          notes: noteSales.text,
-                          storeName: namaToko.text,
-                          storeCode: storeController.text,
-                        );
-                      
+                        if (namaToko.text.isEmpty && cubit.imagePath == null) {
+                          showMessage(
+                            context: context,
+                            title: "Terjadi Kesalahan",
+                            message: "Harap lengkapi form terlebih dahulu",
+                          );
+                        } else {
+                          cubit.postData(
+                            notes: noteSales.text,
+                            storeName: namaToko.text,
+                            storeCode: storeController.text,
+                          );
+                        }
                       },
                       withIcon: false,
                       active: true,
@@ -227,6 +229,45 @@ class _CheckInPageState extends State<CheckInPage> {
           );
         },
       ),
+    );
+  }
+
+  showMessage(
+      {BuildContext? context,
+      String? title = "Submit Check In Gagal",
+      String? message}) {
+    return CustomBottomSheet().showCustomBottomSheet(
+      context: context!,
+      title: title,
+      titleIcon: "assets/icons/ic_caution_red.svg",
+      bodyContent: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          spaceHeight(
+            height: 15,
+          ),
+          Text(
+            message!,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.nunito(
+              fontSize: 14,
+              color: AppColors.black80,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+          spaceHeight(
+            height: 15,
+          ),
+        ],
+      ),
+      bottomContent: Container(
+          padding: const EdgeInsets.all(SizeUtils.basePaddingMargin16),
+          child: CustomButton(
+            title: "Coba Lagi",
+            action: () => Navigator.pop(context),
+            withIcon: false,
+            active: true,
+          )),
     );
   }
 
@@ -256,7 +297,7 @@ class _CheckInPageState extends State<CheckInPage> {
             builder: (context, state) {
               var cubitDropdown = context.read<CheckInCubit>();
 
-              List<DataStore> listToko = [];
+              List<DataStoreSales> listToko = [];
 
               listToko.addAll(cubitDropdown.listToko);
 
@@ -271,7 +312,7 @@ class _CheckInPageState extends State<CheckInPage> {
                     ? 5
                     : listToko.isNotEmpty
                         ? (listToko.length == 1)
-                            ? 0
+                            ? 1
                             : listToko.length
                         : 0,
                 itemBuilder: (BuildContext context, int index) {
@@ -308,7 +349,7 @@ class _CheckInPageState extends State<CheckInPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "${toko.code} - ${toko.name}",
+                            "${toko.storeCode} - ${toko.storeName}",
                             style: GoogleFonts.nunito(
                               fontWeight: fontWeight,
                             ),
@@ -318,8 +359,8 @@ class _CheckInPageState extends State<CheckInPage> {
                     ),
                     onTap: () {
                       FocusScope.of(context).unfocus();
-                      storeController.text = toko.code;
-                      namaToko.text = toko.name;
+                      storeController.text = toko.storeCode;
+                      namaToko.text = toko.storeName;
                       cubit.dataStore = toko;
 
                       searchController.clear();

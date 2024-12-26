@@ -4,7 +4,7 @@ import 'package:hc_management_app/domain/service/http_provider.dart';
 
 class HistorySPGProvider {
   late HttpProvider apiProvider;
-  late final String baseUrl = "http://103.140.34.220:280";
+  late final String baseUrl = "https://visit.sanwin.my.id";
 
   Future<Map<String, dynamic>?> getHistoryAbsence(dynamic params) async {
     try {

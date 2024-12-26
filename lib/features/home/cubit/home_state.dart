@@ -18,3 +18,28 @@ class HomeLoaded extends HomeState {
   @override
   List<Object> get props => [];
 }
+
+
+class HomeSuccessGet extends HomeState {
+  @override
+  List<Object> get props => [];
+}
+
+class HomeStoreFilterLoading extends HomeState {
+  @override
+  List<Object> get props => [];
+}
+
+class HomeStoreFilterLoaded extends HomeState {
+  @override
+  List<Object> get props => [];
+}
+
+class HomeStoreChecklistStore extends HomeState {
+  final bool? state;
+
+  const HomeStoreChecklistStore({this.state});
+
+  @override
+  List<Object> get props => [state!];
+}

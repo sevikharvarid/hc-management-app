@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:hc_management_app/domain/provider/check_in_provider.dart';
 import 'package:hc_management_app/domain/service/data_response.dart';
 import 'package:hc_management_app/domain/service/throw_exception.dart';
@@ -25,15 +27,27 @@ class CheckInRepository {
     }
   }
 
-  Future<DataResponse<String>> postSubmitData(dynamic body) async {
+  Future<DataResponse<String>> postSubmitData(
+    dynamic body,
+    String? status,
+    int? id,
+    List<String>? imagePaths,
+  ) async {
     try {
       if (!await connectivityHelper.checkConnectivityStatus()) {
         return const DataResponse.noConnection();
       }
 
-      var response = await checkInProvider.postSubmitVisit(body);
+      var response = await checkInProvider.postSubmitVisit(
+        body,
+        status,
+        id,
+        imagePaths,
+      );
 
-      if (response!["responseCode"] == 200) {
+      log("response in repository : $response");
+
+      if (response!["responseCode"] == 200 || response["responseCode"] == 201) {
         return DataResponse.success(data: response['data']);
       } else {
         return DataResponse.error(message: response['message']);

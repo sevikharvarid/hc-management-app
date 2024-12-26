@@ -18,6 +18,8 @@ class ProfileSPGCubit extends Cubit<ProfileSPGState> {
   String? nik;
   String? notes;
   String? role;
+  int? logoutStatus;
+
 
   String? photoProfile;
   bool? isVisible = false;
@@ -36,6 +38,8 @@ class ProfileSPGCubit extends Cubit<ProfileSPGState> {
     nik = response.data['nik'];
     role = response.data['role'];
     photoProfile = response.data["photo"];
+    logoutStatus = response.data['logout_status'];
+
 
     await preferences.store(
         PreferencesKey.profilePhoto, photoProfile.toString());

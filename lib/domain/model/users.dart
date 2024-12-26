@@ -37,7 +37,7 @@ class Users {
 class Data {
   int id;
   String name;
-  String notes;
+  String? notes;
   dynamic emailVerifiedAt;
   String nik;
   String? photo;
@@ -50,7 +50,7 @@ class Data {
   Data({
     required this.id,
     required this.name,
-    required this.notes,
+    this.notes,
     required this.emailVerifiedAt,
     required this.nik,
     required this.type,

@@ -159,7 +159,7 @@ class _HistorySPGPageState extends State<HistorySPGPage> {
                                 onTap: () => showDetailImage(
                                       context: context,
                                       imageUrl:
-                                          "http://103.140.34.220:280/storage/storage/${data.image}",
+                                          "https://visit.sanwin.my.id/storage/storage/${data.image}",
                                     ),
                             child: AttendanceCardItem(
                                   spgName: data.spgName,
@@ -283,7 +283,7 @@ class _HistorySPGPageState extends State<HistorySPGPage> {
           //                         onTap: () => showDetailImage(
           //                               context: context,
           //                               imageUrl:
-          //                                   "http://103.140.34.220:280/storage/storage/${data.image}",
+          //                                   "https://visit.sanwin.my.id/storage/storage/${data.image}",
           //                             ),
           //                   child: AttendanceCardItem(
           //                           spgName: data.spgName,

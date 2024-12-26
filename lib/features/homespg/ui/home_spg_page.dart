@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hc_management_app/domain/model/list_spg.dart';
 import 'package:hc_management_app/features/face_recognition/ui/face_recognition_page.dart';
@@ -33,10 +34,7 @@ class HomeSpgPage extends StatefulWidget {
   State<HomeSpgPage> createState() => _HomeSpgPageState();
 }
 
-
-
 class _HomeSpgPageState extends State<HomeSpgPage> {
-  
   TextEditingController nameController = TextEditingController();
 
   TextEditingController searchController = TextEditingController();
@@ -47,12 +45,15 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
   late Stream<DateTime> _dateTimeStream;
   late Timer _timeUpdater;
 
+  // bool isMockLocation = false;
+
   @override
   void initState() {
     super.initState();
     _dateTimeController = StreamController<DateTime>();
     _dateTimeStream = _dateTimeController.stream;
     _startUpdatingTime();
+    // initPlatformState();
   }
 
   void _startUpdatingTime() {
@@ -63,6 +64,20 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
     });
   }
 
+  // Future<void> initPlatformState() async {
+  //   await Permission.location.request();
+  //   if (await Permission.location.isPermanentlyDenied) {
+  //     openAppSettings();
+  //   }
+
+  //   if (!mounted) return;
+  //   try {
+  //     isMockLocation = await SafeDevice.isMockLocation;
+  //     setState(() {});
+  //   } catch (error) {
+  //     log(error.toString());
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -178,7 +193,6 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                           style: GoogleFonts.nunito(
                             fontWeight: FontWeight.w700,
                             color: AppColors.white,
-
                             fontSize: 18,
                           ),
                         ),
@@ -201,7 +215,7 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                                       width: SizeUtils.baseWidthHeight110,
                                       height: SizeUtils.baseWidthHeight110,
                                       imageUrl:
-                                          "http://103.140.34.220:280/storage/storage/${cubit.photoProfile}",
+                                          "https://visit.sanwin.my.id/storage/storage/${cubit.photoProfile}",
                                       boxFit: BoxFit.cover,
                                     ),
                                   )
@@ -451,40 +465,44 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                     ),
                     title: "Masuk",
                     action: () async {
-                      
-                      cubit.checkRadiusStore();
+                      Position? currentPosition =
+                          await Geolocator.getCurrentPosition();
 
-                      await cubit.stream
-                          .firstWhere((state) => state is HomeSpgLoaded);
-
-                      double? radius = cubit.radiusUser;
-                      double? radiusStore = double.parse(cubit.radiusStore!);
-
-                      if (radius! < radiusStore) {
-                        if (await Permission
-                            .locationWhenInUse.serviceStatus.isDisabled) {
-                          showLocationMessage(
-                              message:
-                                  "Tolong aktifkan lokasi terlebih dahulu !");
-                        } else {
-                          if (nameController.text.isNotEmpty) {
-                            showMessage(
-                                "Apakah anda yakin?",
-                                "Absen masuk pada tanggal ${GeneralHelper().convertDateToString(dateTime: DateTime.now())}",
-                                true,
-                                false);
-                          } else {
-                            showMessage("Pastikan tidak ada yang kosong !",
-                                "Pilih Nama terlebih dahulu", true, true);
-                          }
-                        }
-                      } else {
+                      if (currentPosition.isMocked) {
                         showLocationMessage(
-                            title: "Anda berada diluar Area",
-                            message:
-                                "Tidak boleh absen diluar area yang sidah ditentukan!");
+                            title: "Terjadi Kesalahan",
+                            message: "Anda memakai Fake GPS !");
+                      } else {
+                        cubit.checkRadiusStore();
+                        await cubit.stream
+                            .firstWhere((state) => state is HomeSpgLoaded);
+                        double? radius = cubit.radiusUser;
+                        double? radiusStore = double.parse(cubit.radiusStore!);
+                        if (radius! < radiusStore) {
+                          if (await Permission
+                              .locationWhenInUse.serviceStatus.isDisabled) {
+                            showLocationMessage(
+                                message:
+                                    "Tolong aktifkan lokasi terlebih dahulu !");
+                          } else {
+                            if (nameController.text.isNotEmpty) {
+                              showMessage(
+                                  "Apakah anda yakin?",
+                                  "Absen masuk pada tanggal ${GeneralHelper().convertDateToString(dateTime: DateTime.now())}",
+                                  true,
+                                  false);
+                            } else {
+                              showMessage("Pastikan tidak ada yang kosong !",
+                                  "Pilih Nama terlebih dahulu", true, true);
+                            }
+                          }
+                        } else {
+                          showLocationMessage(
+                              title: "Anda berada diluar Area",
+                              message:
+                                  "Tidak boleh absen diluar area yang sidah ditentukan!");
+                        }
                       }
-                   
                     },
                     withIcon: false,
                     active: true,
@@ -497,41 +515,48 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                     ),
                     title: "Keluar",
                     action: () async {
-                        
-                      cubit.checkRadiusStore();
-
-                      await cubit.stream
-                          .firstWhere((state) => state is HomeSpgLoaded);
-
-                      double? radius = cubit.radiusUser;
-                      double? radiusStore = double.parse(cubit.radiusStore!);
-                      log("Radius User : ${radius.toString()}");
-                      log("Radius Store : ${radiusStore.toString()}");
-
-                      if (radius! < radiusStore) {
-                        if (await Permission
-                            .locationWhenInUse.serviceStatus.isDisabled) {
-                          showLocationMessage(
-                              message:
-                                  "Tolong aktifkan lokasi terlebih dahulu !");
-                        } else {
-                          if (nameController.text.isNotEmpty) {
-                            showMessage(
-                              "Apakah anda yakin?",
-                              "Absen keluar pada tanggal ${GeneralHelper().convertDateToString(dateTime: DateTime.now())}",
-                              false,
-                              false,
-                            );
-                          } else {
-                            showMessage("Pastikan tidak ada yang kosong !",
-                                "Pilih Nama terlebih dahulu", true, true);
-                          }
-                        }
-                      } else {
+                      Position? currentPosition =
+                          await Geolocator.getCurrentPosition();
+                      if (currentPosition.isMocked) {
                         showLocationMessage(
-                            title: "Anda berada diluar Area",
-                            message:
-                                "Tidak boleh absen diluar area yang sidah ditentukan!");
+                            title: "Terjadi Kesalahan",
+                            message: "Anda memakai Fake GPS !");
+                      } else {
+                        cubit.checkRadiusStore();
+
+                        await cubit.stream
+                            .firstWhere((state) => state is HomeSpgLoaded);
+
+                        double? radius = cubit.radiusUser;
+                        double? radiusStore = double.parse(cubit.radiusStore!);
+                        log("Radius User : ${radius.toString()}");
+                        log("Radius Store : ${radiusStore.toString()}");
+
+                        if (radius! < radiusStore) {
+                          if (await Permission
+                              .locationWhenInUse.serviceStatus.isDisabled) {
+                            showLocationMessage(
+                                message:
+                                    "Tolong aktifkan lokasi terlebih dahulu !");
+                          } else {
+                            if (nameController.text.isNotEmpty) {
+                              showMessage(
+                                "Apakah anda yakin?",
+                                "Absen keluar pada tanggal ${GeneralHelper().convertDateToString(dateTime: DateTime.now())}",
+                                false,
+                                false,
+                              );
+                            } else {
+                              showMessage("Pastikan tidak ada yang kosong !",
+                                  "Pilih Nama terlebih dahulu", true, true);
+                            }
+                          }
+                        } else {
+                          showLocationMessage(
+                              title: "Anda berada diluar Area",
+                              message:
+                                  "Tidak boleh absen diluar area yang sidah ditentukan!");
+                        }
                       }
                     },
                     withIcon: false,
@@ -690,7 +715,6 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                       cubit.postInCubit(
                         category: isMasuk ? "in" : "out",
                       );
-                     
                     },
                     withIcon: false,
                     active: true,
@@ -785,7 +809,7 @@ class _HomeSpgPageState extends State<HomeSpgPage> {
                     onTap: () {
                       FocusScope.of(context).unfocus();
                       nameController.text = nama.userName;
-                      
+
                       cubit.dataSPG = nama;
 
                       searchController.clear();

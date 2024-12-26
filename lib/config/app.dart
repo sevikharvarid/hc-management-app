@@ -15,6 +15,8 @@ import 'package:hc_management_app/features/homespg/cubit/home_spg_cubit.dart';
 import 'package:hc_management_app/features/homespg/ui/home_spg_page.dart';
 import 'package:hc_management_app/features/login/cubit/login_cubit.dart';
 import 'package:hc_management_app/features/login/ui/login_page.dart';
+import 'package:hc_management_app/features/order/cubit/order_only_cubit.dart';
+import 'package:hc_management_app/features/order/ui/order_only_page.dart';
 import 'package:hc_management_app/features/profile/profile_sales/cubit/profile_sales_cubit.dart';
 import 'package:hc_management_app/features/profile/profile_sales/ui/profile_sales_page.dart';
 import 'package:hc_management_app/features/profile/profile_spg/cubit/profile_spg_cubit.dart';
@@ -32,7 +34,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     // return ScreenUtilInit(
     return ScreenUtilInit(
-      
       designSize: const Size(360, 690),
       builder: (_, __) => MaterialApp(
         navigatorKey: AppConstant.navigatorKey,
@@ -116,13 +117,25 @@ class MyApp extends StatelessWidget {
               );
 
             case Routes.checkoutSales:
+              final dynamic args = settings.arguments;
+              Map<String, dynamic>? data = args;
               return CupertinoPageRoute(
                 builder: (context) => BlocProvider<CheckOutSalesCubit>(
-                  create: (context) => CheckOutSalesCubit()..initCubit(),
+                  create: (context) => CheckOutSalesCubit(data)..initCubit(),
                   child: const CheckoutSalesMainPage(),
                 ),
+              );
+            case Routes.orderOnly:
+              final dynamic args = settings.arguments;
+              Map<String, dynamic>? data = args;
+              return CupertinoPageRoute(
+                builder: (context) => BlocProvider<OrderOnlySalesCubit>(
+                  create: (context) =>
+                      OrderOnlySalesCubit(data)..initOrderOnly(),
+                  child: const OrderOnlySalesPage(),
+                ),
               );  
-
+             
             default:
               return CupertinoPageRoute(
                 builder: (context) => BlocProvider<SplashCubit>(

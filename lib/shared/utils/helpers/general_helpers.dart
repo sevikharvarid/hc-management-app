@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -139,6 +140,9 @@ class GeneralHelper {
 
     File jpgFile = File('$temporaryPath/$originalFileName.jpg');
     await jpgFile.writeAsBytes(jpgBytes);
+    // Print the file size
+    final fileSize = await jpgFile.length();
+    log('File size: $fileSize bytes');
 
     return jpgFile;
   }

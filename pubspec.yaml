@@ -44,6 +44,7 @@ dependencies:
   flutter_screenutil: ^5.9.0
   flutter_svg: ^2.0.10+1
   fluttertoast: ^8.2.4
+  geocoding: ^3.0.0
   geolocator: ^11.0.0
   get_it: ^7.6.7
   google_fonts: 6.1.0
@@ -54,10 +55,12 @@ dependencies:
   location: ^6.0.1
   lottie: ^3.1.0
   path_provider: ^2.1.3
-  permission_handler: 9.0.2
+  permission_handler: ^11.3.1
+  # safe_device: ^1.1.7
   shared_preferences: ^2.2.2
   shimmer: ^3.0.0
   tflite_flutter: ^0.10.4
+  # trust_location: ^2.0.13
 
 dev_dependencies:
   flutter_lints: ^2.0.0
