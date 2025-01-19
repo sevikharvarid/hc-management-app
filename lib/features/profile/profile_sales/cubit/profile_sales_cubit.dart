@@ -33,10 +33,10 @@ class ProfileSalesCubit extends Cubit<ProfileSalesState> {
 
     var response = await profileRepository.getProfile(params);
 
-    name = response.data['name'];
-    notes = response.data['notes'];
-    nik = response.data['nik'];
-    role = response.data['role'];
+    name = response.data['name'] ?? '';
+    notes = response.data['notes'] ?? '';
+    nik = response.data['nik'] ?? '';
+    role = response.data['role'] ?? '';
     photoProfile = response.data["photo"];
     logoutStatus = response.data['logout_status'];
 
