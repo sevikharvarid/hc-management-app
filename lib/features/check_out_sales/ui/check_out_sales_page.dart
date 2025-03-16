@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -14,6 +16,7 @@ import 'package:hc_management_app/shared/widgets/button/custom_button.dart';
 import 'package:hc_management_app/shared/widgets/custom_widget/custom_widget.dart';
 import 'package:hc_management_app/shared/widgets/dropdown/dropdown_with_search.dart';
 import 'package:hc_management_app/shared/widgets/image/image_network_rectangle.dart';
+import 'package:location/location.dart';
 
 class CheckOutSalesPage extends StatefulWidget {
   const CheckOutSalesPage({super.key});
@@ -23,6 +26,36 @@ class CheckOutSalesPage extends StatefulWidget {
 }
 
 class _CheckOutSalesPageState extends State<CheckOutSalesPage> {
+  final Location _location = Location();
+
+  Future<bool> checkMockLocation() async {
+    try {
+      // Cek apakah izin lokasi sudah diberikan
+      bool serviceEnabled = await _location.serviceEnabled();
+      if (!serviceEnabled) {
+        serviceEnabled = await _location.requestService();
+        if (!serviceEnabled) {
+          return false; // Tidak bisa akses layanan lokasi
+        }
+      }
+
+      PermissionStatus permissionGranted = await _location.hasPermission();
+      if (permissionGranted == PermissionStatus.denied) {
+        permissionGranted = await _location.requestPermission();
+        if (permissionGranted != PermissionStatus.granted) {
+          return false; // Tidak memiliki izin lokasi
+        }
+      }
+
+      // Dapatkan informasi lokasi dan cek apakah mock
+      LocationData locationData = await _location.getLocation();
+      return locationData.isMock ?? false; // Kembalikan true jika lokasi mock
+    } catch (e) {
+      log("Error: $e");
+      return false; // Return false jika terjadi error
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     var cubit = context.read<CheckOutSalesCubit>();
@@ -245,7 +278,15 @@ class _CheckOutSalesPageState extends State<CheckOutSalesPage> {
                         ),
                         title: "Checkout",
                         action: () async {
-                          cubit.postCheckoutCubit();
+                          bool isMockLocation = await checkMockLocation();
+                          if (isMockLocation) {
+                            showMessage(
+                              context,
+                              "Gunakan lokasi yang sesuai dengan Device anda",
+                            );
+                          } else {
+                            cubit.postCheckoutCubit();
+                          }
                         },
                         withIcon: false,
                         active: true,

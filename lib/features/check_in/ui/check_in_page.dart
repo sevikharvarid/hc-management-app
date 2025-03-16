@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,6 +19,7 @@ import 'package:hc_management_app/shared/widgets/dropdown/dropdown_with_search.d
 import 'package:hc_management_app/shared/widgets/image/image_widget/image_picker/widget/image_picker_widget.dart';
 import 'package:hc_management_app/shared/widgets/text_field/custom_text_field.dart';
 import 'package:hc_management_app/shared/widgets/text_field/input_text_field_default.dart';
+import 'package:location/location.dart';
 
 class CheckInPage extends StatefulWidget {
   const CheckInPage({super.key});
@@ -32,6 +35,38 @@ class _CheckInPageState extends State<CheckInPage> {
   TextEditingController storeController = TextEditingController();
   TextEditingController searchController = TextEditingController();
   ScrollController scrollFilterController = ScrollController();
+
+  final Location _location = Location();
+  String? storeName = '';
+
+  Future<bool> checkMockLocation() async {
+    try {
+      // Cek apakah izin lokasi sudah diberikan
+      bool serviceEnabled = await _location.serviceEnabled();
+      if (!serviceEnabled) {
+        serviceEnabled = await _location.requestService();
+        if (!serviceEnabled) {
+          return false; // Tidak bisa akses layanan lokasi
+        }
+      }
+
+      PermissionStatus permissionGranted = await _location.hasPermission();
+      if (permissionGranted == PermissionStatus.denied) {
+        permissionGranted = await _location.requestPermission();
+        if (permissionGranted != PermissionStatus.granted) {
+          return false; // Tidak memiliki izin lokasi
+        }
+      }
+
+      // Dapatkan informasi lokasi dan cek apakah mock
+      LocationData locationData = await _location.getLocation();
+      return locationData.isMock ?? false; // Kembalikan true jika lokasi mock
+    } catch (e) {
+      log("Error: $e");
+      return false; // Return false jika terjadi error
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -176,6 +211,9 @@ class _CheckInPageState extends State<CheckInPage> {
                       top: SizeUtils.basePaddingMargin10,
                     ),
                     child: ImagePickerWidget(
+                      userName: cubit.userName,
+                      storeName: storeName,
+                      notes: cubit.notes,
                       width: SizeUtils.baseWidthHeight100,
                       height: SizeUtils.baseWidthHeight100,
                       label: "Upload Gambar",
@@ -205,18 +243,29 @@ class _CheckInPageState extends State<CheckInPage> {
                       ),
                       title: "Kirim Data",
                       action: () async {
-                        if (namaToko.text.isEmpty && cubit.imagePath == null) {
+                        bool isMockLocation = await checkMockLocation();
+                        if (isMockLocation) {
                           showMessage(
                             context: context,
                             title: "Terjadi Kesalahan",
-                            message: "Harap lengkapi form terlebih dahulu",
+                            message:
+                                "Gunakan lokasi yang sesuai dengan Device anda",
                           );
                         } else {
-                          cubit.postData(
-                            notes: noteSales.text,
-                            storeName: namaToko.text,
-                            storeCode: storeController.text,
-                          );
+                          if (namaToko.text.isEmpty &&
+                              cubit.imagePath == null) {
+                            showMessage(
+                              context: context,
+                              title: "Terjadi Kesalahan",
+                              message: "Harap lengkapi form terlebih dahulu",
+                            );
+                          } else {
+                            cubit.postData(
+                              notes: noteSales.text,
+                              storeName: namaToko.text,
+                              storeCode: storeController.text,
+                            );
+                          }
                         }
                       },
                       withIcon: false,
@@ -362,6 +411,10 @@ class _CheckInPageState extends State<CheckInPage> {
                       storeController.text = toko.storeCode;
                       namaToko.text = toko.storeName;
                       cubit.dataStore = toko;
+                      debugPrint("store name ini : ${namaToko.text}");
+                      setState(() {
+                        storeName = namaToko.text;
+                      });
 
                       searchController.clear();
                       Navigator.pop(context);
@@ -383,8 +436,9 @@ class _CheckInPageState extends State<CheckInPage> {
                     hintFontSize: SizeUtils.baseWidthHeight14,
                     controller: searchController,
                     onChanged: (String value) {
+                      debugPrint("value is : $value");
                       // cubitDropdown.changeIconToClose(value);
-                      // cubitDropdown.filterLocation(location: value);
+                      cubitDropdown.filterLocation(value: value);
                     },
                     onEditComplete: () {
                       FocusScope.of(context).unfocus();

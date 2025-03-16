@@ -46,7 +46,6 @@ class _HomePageState extends State<HomePage> {
   TextEditingController searchController = TextEditingController();
   ScrollController scrollFilterController = ScrollController();
 
-
   final ScrollController _scrollController = ScrollController();
   bool _changeColor = false;
 
@@ -275,24 +274,36 @@ class _HomePageState extends State<HomePage> {
                                   return GestureDetector(
                                     onTap: () => onPressedCardList(cubit, data),
                                     child: VisitCardItem(
-                                      attendanceDateIn: data.inDate != null
-                                          ? cubit.generalHelper
-                                              .convertDateToString(
-                                              dateFormat: "EEEE, dd MMMM yyyy",
-                                              dateTime:
-                                                  DateTime.parse(data.inDate!),
-                                            )
-                                          : '-',
-                                      attendanceDateOut: data.outDate != null
-                                          ? cubit.generalHelper
-                                              .convertDateToString(
-                                              dateFormat: "EEEE, dd MMMM yyyy",
-                                              dateTime:
-                                                  DateTime.parse(data.outDate!),
-                                            )
-                                          : '-',
-                                      startDateTime: data.inTime,
-                                      endDateTime: data.outTime ?? '-',
+                                      attendanceDateIn:
+                                          data.inLong == 'order_only'
+                                              ? '-'
+                                              : (data.inDate != null
+                                                  ? cubit.generalHelper
+                                                      .convertDateToString(
+                                                      dateFormat:
+                                                          "EEEE, dd MMMM yyyy",
+                                                      dateTime: DateTime.parse(
+                                                          data.inDate!),
+                                                    )
+                                                  : '-'),
+                                      attendanceDateOut:
+                                          data.inLong == 'order_only'
+                                              ? '-'
+                                              : (data.outDate != null
+                                                  ? cubit.generalHelper
+                                                      .convertDateToString(
+                                                      dateFormat:
+                                                          "EEEE, dd MMMM yyyy",
+                                                      dateTime: DateTime.parse(
+                                                          data.outDate!),
+                                                    )
+                                                  : '-'),
+                                      startDateTime: data.inLong == 'order_only'
+                                          ? '-'
+                                          : (data.inTime ?? '-'),
+                                      endDateTime: data.inLong == 'order_only'
+                                          ? '-'
+                                          : (data.outTime ?? '-'),
                                       storeName: data.storeName ?? '-',
                                       storeCode: data.storeCode ?? '-',
                                       soNumber: data.soCode ?? '-',
@@ -435,14 +446,24 @@ class _HomePageState extends State<HomePage> {
     log("DATA GEDE BANGET :${const JsonEncoder.withIndent(' ').convert(data)}");
 
     if (gpsStatus) {
-      Navigator.pushNamed(
-        context,
-        Routes.checkoutSales,
-        arguments: {
-          'data': data,
-          'isFromHome': false,
-        },
-      );
+      if (data!.inLong == 'order_only') {
+        Navigator.pushNamed(
+          context,
+          Routes.orderOnlyInput,
+          arguments: {
+            'data': data,
+          },
+        );
+      } else {
+        Navigator.pushNamed(
+          context,
+          Routes.checkoutSales,
+          arguments: {
+            'data': data,
+            'isFromHome': false,
+          },
+        );
+      }
     } else {
       onPressedCardList(cubit, data);
     }
@@ -504,8 +525,8 @@ class _HomePageState extends State<HomePage> {
                   AppColors.green,
                 ),
                 title: "Order Only",
-                // action: () => onPressedOrderOnly(cubit),
-                action: () => showPopup(context, cubit),
+                action: () => onPressedOrderOnly(cubit),
+                // action: () => showPopup(context, cubit),
                 withIcon: false,
                 active: true,
               ),
@@ -548,8 +569,7 @@ class _HomePageState extends State<HomePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Pilih Toko'),
-          // content: const Text('This is the content of the pop-up!'),
+          title: const Text('Pilih Toko terlebih dahulu'),
           content: Column(
             children: [
               Container(

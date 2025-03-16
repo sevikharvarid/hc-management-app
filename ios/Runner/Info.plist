@@ -45,5 +45,17 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- Tambahkan izin lokasi di sini -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Aplikasi ini membutuhkan akses lokasi untuk fitur check-in.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Aplikasi ini menggunakan lokasi bahkan saat di latar belakang.</string>
+
+	<key>NSCameraUsageDescription</key>
+	<string>App membutuhkan akses kamera untuk mengambil gambar</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>App membutuhkan akses galeri untuk memilih gambar</string>
+
 </dict>
 </plist>

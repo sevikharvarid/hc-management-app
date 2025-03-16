@@ -111,12 +111,14 @@ class CheckOutSalesCubit extends Cubit<CheckOutSalesState> {
     log("visitData.inLong : ${visitData!.inLong}");
     if (visitData!.inLat != null && visitData!.inLong != null) {
       origin =
-          await getAddressFromLatLng(visitData!.inLat!, visitData!.inLong!);
+          await getAddressFromLatLng(
+          double.parse(visitData!.inLat!), double.parse(visitData!.inLong!));
     }
 
     if (visitData!.outLat != null && visitData!.outLong != null) {
       destination =
-          await getAddressFromLatLng(visitData!.outLat!, visitData!.outLong!);
+          await getAddressFromLatLng(
+          double.parse(visitData!.outLat!), double.parse(visitData!.outLong!));
     }
 
     List<String>? imageCheckin =
@@ -202,15 +204,18 @@ class CheckOutSalesCubit extends Cubit<CheckOutSalesState> {
       userType: 'sales',
     );
 
+    DateTime currentServerTime = await generalHelper.getNtpTime();
+
+
     //Other toko store_id di isi null
     var params = {
       'store_id': visitData!.storeId.toString(),
       'store_name': visitData!.storeName,
       'store_code': visitData!.storeCode,
       'out_date': generalHelper.convertDateToString(
-          dateTime: DateTime.now(), dateFormat: "yyyy-MM-dd"),
+          dateTime: currentServerTime, dateFormat: "yyyy-MM-dd"),
       'out_time': generalHelper.convertDateToString(
-          dateTime: DateTime.now(), dateFormat: "HH:mm"),
+          dateTime: currentServerTime, dateFormat: "HH:mm"),
       'out_lat': position.latitude.toString(),
       'out_long': position.longitude.toString(),
       'user_login': jsonEncode(users.toJson()),

@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/rendering.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hc_management_app/config/service/background_service_init.dart';
 import 'package:hc_management_app/domain/model/stores.dart';
@@ -30,6 +31,7 @@ class CheckInCubit extends Cubit<CheckInState> {
   bool isReadOnlyStore = false;
 
   List<DataStoreSales> listToko = [];
+  List<DataStoreSales> listTokoTemporary = [];
   DataStoreSales? dataStore;
 
   Position? userPosition;
@@ -38,6 +40,10 @@ class CheckInCubit extends Cubit<CheckInState> {
   late int? totalImage = 1;
 
   List<File>? fileImages = [];
+
+  late String? userName = '';
+  late String? storeName = '';
+  late String? notes = '';
 
   void initCubit() async {
     var params = await preferences.read(PreferencesKey.userId);
@@ -50,6 +56,9 @@ class CheckInCubit extends Cubit<CheckInState> {
     await getStoreData();
 
     totalImage = response.data['total_image'];
+
+    userName = response.data['name'];
+    notes = response.data['notes'];
     log("response : $totalImage");
 
     emit(CheckInLoaded());
@@ -62,7 +71,7 @@ class CheckInCubit extends Cubit<CheckInState> {
   }) async {
     emit(CheckInLoading());
 
-    Position position = await generalHelper.getCurrentPosition();
+    Position? position = await generalHelper.getCurrentPosition();
 
     String userId = await preferences.read(PreferencesKey.userId);
     String userName = await preferences.read(PreferencesKey.name);
@@ -79,9 +88,6 @@ class CheckInCubit extends Cubit<CheckInState> {
     );
 
     int storeId = 0;
-
-    log("item storeeCode : $storeCode");
-    log("item storeName : $storeName");
 
     for (var item in listToko) {
       log("item element : $item");
@@ -112,15 +118,17 @@ class CheckInCubit extends Cubit<CheckInState> {
       images.add(item.path);
     }
 
+    DateTime currentServerTime = await generalHelper.getNtpTime();
+
     var params = {
       'store_id': idStore,
       'store_name': storeName,
       'store_code': codeStore,
       'note': notes,
       'in_date': generalHelper.convertDateToString(
-          dateTime: DateTime.now(), dateFormat: "yyyy-MM-dd"),
+          dateTime: currentServerTime, dateFormat: "yyyy-MM-dd"),
       'in_time': generalHelper.convertDateToString(
-          dateTime: DateTime.now(), dateFormat: "HH:mm"),
+          dateTime: currentServerTime, dateFormat: "HH:mm"),
       'in_lat': position.latitude.toString(),
       'in_long': position.longitude.toString(),
       'user_login': jsonEncode(users.toJson()),
@@ -187,7 +195,11 @@ class CheckInCubit extends Cubit<CheckInState> {
 
     var userId = await preferences.read(PreferencesKey.userId);
 
-    var params = userId;
+    // var params = userId;
+    var params = {
+      'userId': userId,
+      'search': '',
+    };
 
     final response = await checkInRepository.getStoreData(params);
 
@@ -195,9 +207,44 @@ class CheckInCubit extends Cubit<CheckInState> {
 
     listToko =
         responseData.map((item) => DataStoreSales.fromJson(item)).toList();
+    listTokoTemporary = listToko;
 
     emit(CheckInFilterLoaded());
   }
+
+  FutureOr<void> filterLocation({String? value}) async {
+    emit(CheckInFilterLoading());
+
+    if (value == null || value.isEmpty || value.length < 3) {
+      listToko = listTokoTemporary;
+      emit(CheckInFilterLoaded());
+      return;
+    }
+
+    // Jika pencarian lebih dari 3 karakter, panggil API
+    var userId = await preferences.read(PreferencesKey.userId);
+
+    var params = {
+      'userId': userId,
+      'search': value,
+    };
+
+    try {
+      final response = await checkInRepository.getStoreData(params);
+      final List<dynamic> responseData = response.data['data'];
+
+      listToko =
+          responseData.map((item) => DataStoreSales.fromJson(item)).toList();
+    } catch (e) {
+      debugPrint("Error fetching store data: $e");
+      listToko = [];
+    }
+
+    emit(CheckInFilterLoaded());
+  }
+
+
+
 }
 
 class CheckInService {

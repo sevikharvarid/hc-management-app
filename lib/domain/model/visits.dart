@@ -8,12 +8,16 @@ class VisitData {
   final String? image;
   final String? inDate;
   final String? inTime;
-  final double? inLat;
-  final double? inLong;
+  // final double? inLat;
+  // final double? inLong;
+  final String? inLat;
+  final String? inLong;
   final String? outDate;
   final String? outTime;
-  final double? outLat;
-  final double? outLong;
+  // final double? outLat;
+  // final double? outLong;
+  final String? outLat;
+  final String? outLong;
   final String? userLogin;
   // final UserLogin? userLogin;
   final String? deletedAt;
@@ -46,7 +50,9 @@ class VisitData {
   factory VisitData.fromJson(Map<String, dynamic> json) {
     return VisitData(
       id: json['id'],
-      storeId: json['store_id'],
+      storeId: json['store_id'] is int
+          ? json['store_id']
+          : int.parse(json['store_id']),
       storeName: json['store_name'],
       storeCode: json['store_code'],
       note: json['note'],
@@ -56,12 +62,17 @@ class VisitData {
       // json['image'] != null ? List<String>.from(json['image']) : <String>[],
       inDate: json['in_date'],
       inTime: json['in_time'],
-      inLat: json['in_lat'] != null ? double.parse(json['in_lat']) : null,
-      inLong: json['in_long'] != null ? double.parse(json['in_long']) : null,
+      // inLat: json['in_lat'] != null ? double.parse(json['in_lat']) : null,
+      // inLong: json['in_long'] != null ? double.parse(json['in_long']) : null,
+      inLat: json['in_lat'],
+      inLong: json['in_long'],
+
       outDate: json['out_date'],
       outTime: json['out_time'],
-      outLat: json['out_lat'] != null ? double.parse(json['out_lat']) : null,
-      outLong: json['out_long'] != null ? double.parse(json['out_long']) : null,
+      outLat: json['out_lat'],
+      outLong: json['out_long'],
+      // outLat: json['out_lat'] != null ? double.parse(json['out_lat']) : null,
+      // outLong: json['out_long'] != null ? double.parse(json['out_long']) : null,
       // userLogin: json['user_login'] != null
       //     ? UserLogin.fromJson(json['user_login'])
       //     : null,

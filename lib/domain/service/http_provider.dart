@@ -53,6 +53,10 @@ class HttpProvider {
           .timeout(Duration(milliseconds: AppConstant.timeoutMillisecond));
 
       responseJson = response(post);
+
+      // Tambahkan log request ke Alice
+      // alice!.onHttpResponse(responseJson);
+
     } on Exception catch (e) {
       log(e.toString());
     } finally {
@@ -84,6 +88,10 @@ class HttpProvider {
           .timeout(Duration(milliseconds: AppConstant.timeoutMillisecond));
 
       responseJson = response(get);
+
+
+      // Tambahkan log request ke Alice
+      // alice!.onHttpResponse(responseJson);
     } on Exception catch (e) {
       log(e.toString());
     } finally {
@@ -115,6 +123,10 @@ class HttpProvider {
           .timeout(Duration(milliseconds: AppConstant.timeoutMillisecond));
 
       responseJson = response(post);
+
+
+      // Tambahkan log request ke Alice
+      // alice!.onHttpResponse(responseJson);
     } on Exception catch (e) {
       log(e.toString());
     } finally {
@@ -167,6 +179,10 @@ class HttpProvider {
           await http.Response.fromStream(streamedResponse);
 
       responseJson = response(postResponse);
+
+
+      // Tambahkan log request ke Alice
+      // alice!.onHttpResponse(responseJson);
     } on Exception catch (e) {
       log(e.toString());
     } finally {
@@ -201,10 +217,27 @@ class HttpProvider {
           'user_login': body['user_login'],
           'user_id': body['user_id'],
         });
-        for (var image in imagePaths) {
-          request.files
-              .add(await http.MultipartFile.fromPath('image[]', image));
+
+        log("order  :$imagePaths");
+
+        // Logika untuk imagePaths
+        if (imagePaths.any((e) => e == 'order_only')) {
+          // Tambahkan hanya 'order_only'
+          request.files.add(
+            http.MultipartFile.fromString('image[]', 'order_only'),
+          );
+        } else {
+          // Tambahkan semua gambar dari imagePaths
+          for (var image in imagePaths) {
+            request.files.add(
+              await http.MultipartFile.fromPath('image[]', image),
+            );
+          }
         }
+        // for (var image in imagePaths) {
+        //   request.files
+        //       .add(await http.MultipartFile.fromPath('image[]', image));
+        // }
 
         http.StreamedResponse streamedResponse = await request.send();
         http.Response postResponse =
@@ -231,6 +264,46 @@ class HttpProvider {
         responseJson = response(postResponse);
       }
 
+
+      // Tambahkan log request ke Alice
+      // alice!.onHttpResponse(responseJson);
+
+      log("REQUEST :$request");
+    } on Exception catch (e) {
+      log(e.toString());
+    } finally {
+      // client.close();
+    }
+
+    return responseJson;
+  }
+
+  Future<Map<String, dynamic>?> postOrderOnly({
+    required Map<String, dynamic> body,
+  }) async {
+    dynamic responseJson;
+    String stringUrl = "$baseUrl$params";
+    final headers = await getHeaders();
+
+    try {
+      var request = http.MultipartRequest('POST', Uri.parse(stringUrl));
+      request.headers.addAll(headers);
+
+      request.fields.addAll({
+        'store_id': body['store_id'],
+        'store_name': body['store_name'],
+        'store_code': body['store_code'],
+        'user_login': body['user_login'],
+        // '_method': body['method'],
+        'user_id': body['user_id'],
+      });
+      http.StreamedResponse streamedResponse = await request.send();
+      http.Response postResponse =
+          await http.Response.fromStream(streamedResponse);
+      responseJson = response(postResponse);
+
+      // Tambahkan log request ke Alice
+      // alice!.onHttpResponse(responseJson);
       log("REQUEST :$request");
     } on Exception catch (e) {
       log(e.toString());

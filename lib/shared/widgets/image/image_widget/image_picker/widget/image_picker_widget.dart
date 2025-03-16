@@ -36,6 +36,9 @@ class ImagePickerWidget extends StatefulWidget {
   final ImagePickerTypeEnum imagePickerType;
   final List<File>? pickedImage;
   final int? objectKey;
+  final String? userName;
+  final String? storeName;
+  final String? notes;
 
   const ImagePickerWidget({
     super.key,
@@ -52,6 +55,9 @@ class ImagePickerWidget extends StatefulWidget {
     this.pickedImage,
     this.objectKey,
     this.accessibilityId,
+    this.userName = '',
+    this.storeName = '',
+    this.notes = '',
   });
 
   @override
@@ -389,19 +395,22 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
                 const EdgeInsets.only(bottom: SizeUtils.basePaddingMargin16),
             child: Column(children: [
               // pick image from gallery
-              // imagePickerSourceWidget(
-              //   label: "Pilih dari Gallery",
-              //   imageUrl: "assets/icons/ic_gallery.svg",
-              //   action: () {
-              //     cubit.openImagePicker(
-              //       index: index,
-              //       camera: false,
-              //       quality: widget.quality,
-              //     );
-              //     Navigator.pop(context);
-              //   },
-              // ),
-              // customHorizontalDivider(height: SizeUtils.baseWidthHeight1),
+              imagePickerSourceWidget(
+                label: "Pilih dari Gallery",
+                imageUrl: "assets/icons/ic_camera.svg",
+                action: () {
+                  cubit.openImagePicker(
+                    index: index,
+                    camera: false,
+                    quality: widget.quality,
+                    userName: widget.userName,
+                    storeName: widget.storeName,
+                    notes: widget.notes,
+                  );
+                  Navigator.pop(context);
+                },
+              ),
+              customHorizontalDivider(height: SizeUtils.baseWidthHeight1),
 
               // pick image from camera
               imagePickerSourceWidget(
@@ -412,6 +421,9 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
                     index: index,
                     camera: true,
                     quality: widget.quality,
+                    userName: widget.userName,
+                    storeName: widget.storeName,
+                    notes: widget.notes,
                   );
                   Navigator.pop(context);
                 },

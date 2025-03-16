@@ -1,531 +1,234 @@
-import 'dart:developer';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hc_management_app/config/routes.dart';
+import 'package:hc_management_app/domain/model/stores.dart';
 import 'package:hc_management_app/features/order/cubit/order_only_cubit.dart';
-import 'package:hc_management_app/features/order/cubit/order_only_state.dart';
-import 'package:hc_management_app/features/order/ui/order_only_list_product_page.dart';
 import 'package:hc_management_app/shared/utils/constant/app_colors.dart';
 import 'package:hc_management_app/shared/utils/constant/size_utils.dart';
 import 'package:hc_management_app/shared/widgets/alert/custom_bottom_sheet.dart';
 import 'package:hc_management_app/shared/widgets/alert/progress_dialog.dart';
-import 'package:hc_management_app/shared/widgets/alert/toast_widget.dart';
 import 'package:hc_management_app/shared/widgets/atom/spacer.dart';
 import 'package:hc_management_app/shared/widgets/button/custom_button.dart';
+import 'package:hc_management_app/shared/widgets/custom_widget/custom_loading.dart';
+import 'package:hc_management_app/shared/widgets/dropdown/dropdown_with_search.dart';
 import 'package:hc_management_app/shared/widgets/text_field/custom_text_field.dart';
+import 'package:hc_management_app/shared/widgets/text_field/input_text_field_default.dart';
 
-class OrderOnlySalesPage extends StatefulWidget {
-  const OrderOnlySalesPage({super.key});
+class OrderOnlyStorePage extends StatefulWidget {
+  const OrderOnlyStorePage({super.key});
 
   @override
-  State<OrderOnlySalesPage> createState() => _OrderOnlySalesPageState();
+  State<OrderOnlyStorePage> createState() => _OrderOnlyStorePageState();
 }
 
-class _OrderOnlySalesPageState extends State<OrderOnlySalesPage> {
-  final kodeBarang = TextEditingController();
-  final namaBarang = TextEditingController();
-  final jumlahBarang = TextEditingController();
-  final hargaBarang = TextEditingController();
-
+class _OrderOnlyStorePageState extends State<OrderOnlyStorePage> {
+  TextEditingController namaToko = TextEditingController();
+  TextEditingController nikSales = TextEditingController();
+  TextEditingController noteSales = TextEditingController();
+  TextEditingController storeController = TextEditingController();
+  TextEditingController searchController = TextEditingController();
+  ScrollController scrollFilterController = ScrollController();
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<OrderOnlySalesCubit>();
-    return BlocConsumer<OrderOnlySalesCubit, OrderOnlySalesState>(
-      listener: (context, state) {
-        if (state is InputSOLoading) {
-          showProgressDialog(context: context);
-        }
+    return BlocProvider(
+      create: (context) => OrderOnlyStoreCubit({})..initCubit(),
+      child: BlocConsumer<OrderOnlyStoreCubit, OrderOnlyStoreState>(
+        listener: (context, state) {
+          if (state is OrderOnlyStoreLoading) {
+            showProgressDialog(
+              context: context,
+            );
+          }
 
-        if (state is InputSOLoaded) {
-          Navigator.pop(context);
-        }
+          if (state is OrderOnlyStoreFailed) {
+            Navigator.pop(context);
+            showMessage(
+                context: context, message: 'Pengajuan Order Only Anda Gagal');
+          }
 
-        if (state is InputAddingProductAlreadyExist) {
-          Navigator.pop(context);
-          showMessage(
-            context: context,
-            message: "Sudah ada barang yang sama",
-            title: "Kesalahan Input Data",
-          );
-        }
+          if (state is OrderOnlyStoreSuccess) {
+            Navigator.pop(context);
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              Routes.orderOnlyInput,
+              (route) => false,
+              arguments: {
+                'data': state.data,
+              },
+            );
+          }
 
-        if (state is InputAddingProductFailed) {
-          Navigator.pop(context);
-          showMessage(
-            context: context,
-            message: "Harga barang melebihi batas",
-            title: "Kesalahan Input Data",
-          );
-        }
-
-        if (state is InputAddingProductLoading) {
-          showProgressDialog(context: context);
-        }
-
-        if (state is InputAddingProductLoaded) {
-          Navigator.pop(context);
-          namaBarang.clear();
-          kodeBarang.clear();
-          jumlahBarang.clear();
-          hargaBarang.clear();
-        }
-
-        if (state is SaveProductLoading) {
-          showProgressDialog(context: context);
-        }
-
-        if (state is SaveProductLoaded) {
-          Navigator.pop(context);
-          Navigator.pushNamedAndRemoveUntil(
-              context, Routes.mainSales, (route) => false);
-
-          showToast(
-            context: context,
-            child: ToastWidget(
-              borderColor: AppColors.green,
-              backgroundColor: AppColors.green.withOpacity(0.2),
-              message: "Save SO Berhasil",
-              lineHeight: SizeUtils.baseLineText1,
-              icon: 'assets/icons/ic_caution_blue.svg',
+          if (state is OrderOnlyStoreLoaded) {
+            Navigator.pop(context);
+          }
+        },
+        builder: (context, state) {
+          final cubit = context.read<OrderOnlyStoreCubit>();
+          return Scaffold(
+            appBar: AppBar(
+              backgroundColor: AppColors.primary,
+              title: Text(
+                "Order Only",
+                style: GoogleFonts.nunito(
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.white,
+                  fontSize: 20,
+                ),
+              ),
+              leading: IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: Icon(
+                  Icons.arrow_back_ios,
+                  color: AppColors.white,
+                ),
+              ),
             ),
-          );
-        }
-      },
-      builder: (context, state) {
-        return Scaffold(
-          bottomNavigationBar: CustomButton(
-            title: "Save SO",
-            withIcon: false,
-            active: cubit.dataTable!.isNotEmpty,
-            margin: 20,
-            action: () {
-              if (cubit.dataTable!.isNotEmpty) {
-                cubit.saveSOData();
-              }
-            },
-          ),
-          body: SingleChildScrollView(
-            child: Column(
-              children: [
-                Container(
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: const BorderRadius.all(Radius.circular(12)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey
-                            .withOpacity(0.3), // Warna bayangan (shadow color)
-                        spreadRadius: 2, // Jarak penyebaran bayangan
-                        blurRadius: 2, // Jarak blur bayangan
-                        offset: const Offset(
-                            0, 2), // Perpindahan bayangan dari kontainer
-                      ),
-                    ],
+            body: Container(
+              width: MediaQuery.of(context).size.width,
+              margin: const EdgeInsets.all(2),
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  spaceHeight(
+                    height: 12,
                   ),
-                  child: SingleChildScrollView(
-                    child: Column(
+                  Container(
+                    margin: const EdgeInsets.only(
+                        left: 16, top: 12, bottom: 12, right: 24),
+                    child: Row(
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'No. SO : ${cubit.numberSO ?? '-'}',
-                              style: GoogleFonts.nunito(
-                                color: AppColors.black,
-                                fontWeight: FontWeight.w400,
-                                fontSize: 14.sp,
-                              ),
-                            ),
-                            Text(
-                              'No. Ref : ',
-                              style: GoogleFonts.nunito(
-                                color: AppColors.black,
-                                fontWeight: FontWeight.w400,
-                                fontSize: 14.sp,
-                              ),
-                            ),
-                          ],
-                        ),
-                        spaceHeight(height: 16.h),
                         SizedBox(
-                          width: double.infinity,
+                          height: 70,
+                          width: 100,
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
-                                  GestureDetector(
-                                    onTap: () async {
-                                      var result = await Navigator.push(
-                                          context,
-                                          CupertinoPageRoute(
-                                              builder: (context) =>
-                                                  BlocProvider(
-                                                    create: (context) =>
-                                                        OrderOnlySalesCubit({})
-                                                          ..initListProduct(),
-                                                    child:
-                                                        const OrderOnlyListProductPage(),
-                                                  )));
-
-                                      if (result != null) {
-                                        String? value = result;
-                                        log("value :$value");
-                                        setState(() {
-                                          namaBarang.text =
-                                              value!.split(':').first;
-                                          kodeBarang.text = value.split(':')[1];
-                                          jumlahBarang.text = '1';
-                                          hargaBarang.text =
-                                              value.split(':')[2];
-                                        });
-                                      }
-                                    },
-                                    child: Container(
-                                      width: 200.w,
-                                      margin: const EdgeInsets.symmetric(
-                                          vertical: 8),
-                                      child: buildTextField(
-                                        controller: kodeBarang,
-                                        hintText: "Masukkan Kode Barang",
-                                        label: "Kode Barang",
-                                        isReadOnly: true,
-                                        enabled: false,
-                                      ),
-                                    ),
-                                  ),
-                                  Container(
-                                    width: 80.w,
-                                    margin:
-                                        const EdgeInsets.symmetric(vertical: 8),
-                                    child: buildTextField(
-                                      controller: jumlahBarang,
-                                      keyboardType: TextInputType.number,
-                                      hintText: "Jumlah",
-                                      label: "QTY",
-                                    ),
-                                  ),
-                                ],
+                              Checkbox(
+                                value: cubit.isChecked,
+                                onChanged: (value) {
+                                  cubit.setCheckBox(value);
+                                },
                               ),
-                              spaceHeight(height: 8.h),
-                              Row(
-                                children: [
-                                  GestureDetector(
-                                    onTap: () async {
-                                      var result = await Navigator.push(
-                                          context,
-                                          CupertinoPageRoute(
-                                              builder: (context) =>
-                                                  BlocProvider(
-                                                    create: (context) =>
-                                                        OrderOnlySalesCubit({})
-                                                          ..initListProduct(),
-                                                    child:
-                                                        const OrderOnlyListProductPage(),
-                                                  )));
-                                      if (result != null) {
-                                        String? value = result;
-                                        setState(() {
-                                          namaBarang.text =
-                                              value!.split(':').first;
-                                          kodeBarang.text = value.split(':')[1];
-                                          jumlahBarang.text = '1';
-                                          hargaBarang.text =
-                                              value.split(':')[2];
-                                        });
-                                      }
-                                    },
-                                    child: Container(
-                                      width: 200.w,
-                                      margin: const EdgeInsets.symmetric(
-                                          vertical: 8),
-                                      child: buildTextField(
-                                        controller: namaBarang,
-                                        hintText: "Masukkan Nama Barang",
-                                        label: "Nama Barang",
-                                        isReadOnly: true,
-                                        enabled: false,
-                                      ),
-                                    ),
-                                  ),
-                                  Container(
-                                    width: 90.w,
-                                    margin:
-                                        const EdgeInsets.symmetric(vertical: 8),
-                                    child: buildTextField(
-                                      keyboardType: TextInputType.number,
-                                      controller: hargaBarang,
-                                      hintText: "Harga",
-                                      label: "Harga Barang",
-                                    ),
-                                  ),
-                                ],
+                              Text(
+                                "Other Toko",
+                                style: GoogleFonts.nunito(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                ),
                               ),
                             ],
                           ),
                         ),
-                        CustomButton(
-                          title: "Tambah Data",
-                          withIcon: false,
-                          active: true,
-                          margin: 20,
-                          action: () {
-                            log("data :${cubit.dataTable}");
-                            if (namaBarang.text.isEmpty &&
-                                kodeBarang.text.isEmpty &&
-                                jumlahBarang.text.isEmpty &&
-                                hargaBarang.text.isEmpty) {
-                              showMessage(
-                                context: context,
-                                message: "Lengkapi data barang terlebih dahulu",
-                                title: "Data tidak lengkap",
-                              );
-                            } else {
-                              cubit.addProducts(
-                                namaBarang: namaBarang.text,
-                                jumlahBarang: jumlahBarang.text,
-                                hargaBarang: hargaBarang.text,
-                              );
-                            }
-                          },
-                        ),
+                        Visibility(
+                          visible: !cubit.isChecked,
+                          child: Expanded(
+                            child: DropdownWithSearchWidget(
+                              width: MediaQuery.of(context).size.width,
+                              height: SizeUtils.baseWidthHeight48,
+                              searchController: storeController,
+                              textHint: "Pilih Toko",
+                              bottomSheetLabel: "Pilih Toko",
+                              onTap: () {
+                                showStoreList(context, cubit);
+                              },
+                            ),
+                          ),
+                        )
                       ],
                     ),
                   ),
-                ),
-                spaceHeight(height: 12.h),
-                if (cubit.dataTable!.isNotEmpty)
                   Container(
-                    margin: const EdgeInsets.all(16),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: const BorderRadius.all(Radius.circular(12)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.3),
-                          spreadRadius: 2,
-                          blurRadius: 2, // Jarak blur bayangan
-                          offset: const Offset(
-                              0, 2), // Perpindahan bayangan dari kontainer
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              color: AppColors.primary.withOpacity(0.3),
-                              width: 100,
-                              child: Text(
-                                "Item",
-                                style: GoogleFonts.nunito(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.black,
-                                  fontSize: 12.sp,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              color: AppColors.primary.withOpacity(0.3),
-                              width: 35,
-                              child: Text(
-                                "Qty",
-                                style: GoogleFonts.nunito(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.black,
-                                  fontSize: 12.sp,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              color: AppColors.primary.withOpacity(0.3),
-                              width: 75,
-                              child: Text(
-                                "HrgSat ",
-                                style: GoogleFonts.nunito(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.black,
-                                  fontSize: 12.sp,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              color: AppColors.primary.withOpacity(0.3),
-                              width: 75,
-                              child: Text(
-                                "Harga",
-                                style: GoogleFonts.nunito(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.black,
-                                  fontSize: 12.sp,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              color: AppColors.primary.withOpacity(0.3),
-                              width: 30.w,
-                              // child: Text(
-                              //   "Harga",
-                              //   style: GoogleFonts.nunito(
-                              //     fontWeight: FontWeight.bold,
-                              //     color: AppColors.black,
-                              //     fontSize: 12.sp,
-                              //   ),
-                              // ),
-                            ),
-                          ],
-                        ),
-                        ListView(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          children:
-                              List.generate(cubit.dataTable!.length, (index) {
-                            String? dataItem = cubit.dataTable![index];
-
-                            return Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                SizedBox(
-                                  width: 100,
-                                  child: Text(
-                                    dataItem.split(':')[0],
-                                    style: GoogleFonts.nunito(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.black,
-                                      fontSize: 12.sp,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 35,
-                                  child: Text(
-                                    dataItem.split(':')[1],
-                                    style: GoogleFonts.nunito(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.black,
-                                      fontSize: 12.sp,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 75,
-                                  child: Text(
-                                    dataItem.split(':')[2],
-                                    style: GoogleFonts.nunito(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.black,
-                                      fontSize: 12.sp,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 75,
-                                  child: Text(
-                                    dataItem.split(':')[3],
-                                    style: GoogleFonts.nunito(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.black,
-                                      fontSize: 12.sp,
-                                    ),
-                                  ),
-                                ),
-                                GestureDetector(
-                                  onTap: () {
-                                    cubit.removeItem(index);
-                                  },
-                                  child: SizedBox(
-                                      width: 30.w,
-                                      child: SvgPicture.asset(
-                                          "assets/icons/ic_trash_red.svg")),
-                                ),
-                              ],
-                            );
-                          }),
-                        ),
-                      ],
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    child: buildTextField(
+                      isReadOnly: !cubit.isReadOnlyStore,
+                      controller: namaToko,
+                      hintText: "Masukkan Nama Toko",
+                      label: "Nama Toko",
                     ),
                   ),
-                if (cubit.dataTable!.isNotEmpty)
-                  Row(
-                    children: [
-                      Container(
-                        margin: const EdgeInsets.all(16),
-                        padding: const EdgeInsets.all(16),
-                        alignment: Alignment.centerLeft,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(12)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.3),
-                              spreadRadius: 2,
-                              blurRadius: 2,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          "Total : ${cubit.totalQuantity} Item",
-                          style: GoogleFonts.nunito(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.black,
-                            fontSize: 12.sp,
-                          ),
-                        ),
+                  // Container(
+                  //   margin:
+                  //       const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  //   child: buildTextField(
+                  //     maxLines: 7,
+                  //     controller: noteSales,
+                  //     hintText: "Masukkan Keterangan",
+                  //     label: "Notes",
+                  //   ),
+                  // ),
+                  // Container(
+                  //   margin: const EdgeInsets.only(
+                  //     left: SizeUtils.basePaddingMargin24,
+                  //     right: SizeUtils.basePaddingMargin24,
+                  //     bottom: SizeUtils.basePaddingMargin16,
+                  //     top: SizeUtils.basePaddingMargin10,
+                  //   ),
+                  //   child: ImagePickerWidget(
+                  //     width: SizeUtils.baseWidthHeight100,
+                  //     height: SizeUtils.baseWidthHeight100,
+                  //     label: "Upload Gambar",
+                  //     accessibilityId: "Ac",
+                  //     quality: 15,
+                  //     imageName: "Image Gambar",
+                  //     mandatory: true,
+                  //     minimumImage: 1,
+                  //     maximumImage:
+                  //         cubit.totalImage == 1 ? 1 : cubit.totalImage,
+                  //     imagePickerType: cubit.totalImage == 1
+                  //         ? ImagePickerTypeEnum.single
+                  //         : ImagePickerTypeEnum.multiple,
+                  //     pickedImage: const [],
+                  //     onImageChanged: (value) {
+                  //       cubit.saveImage(value);
+                  //     },
+                  //   ),
+                  // ),
+                  Container(
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    child: CustomButton(
+                      borderColor: AppColors.primary,
+                      backgroundColor: MaterialStateProperty.all(
+                        AppColors.purple,
                       ),
-                      Container(
-                        margin: const EdgeInsets.all(16),
-                        padding: const EdgeInsets.all(16),
-                        alignment: Alignment.centerLeft,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(12)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.3),
-                              spreadRadius: 2,
-                              blurRadius: 2,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          "Total Harga : Rp. ${cubit.totalPriceProduct}",
-                          style: GoogleFonts.nunito(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.black,
-                            fontSize: 12.sp,
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-              ],
+                      title: "Input SO",
+                      action: () async {
+                        if (namaToko.text.isEmpty) {
+                          showMessage(
+                            context: context,
+                            title: "Terjadi Kesalahan",
+                            message: "Harap lengkapi form terlebih dahulu",
+                          );
+                        } else {
+                          cubit.postData(
+                            notes: noteSales.text,
+                            storeName: namaToko.text,
+                            storeCode: storeController.text,
+                          );
+                        }
+                      },
+                      withIcon: false,
+                      active: true,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
-  showMessage({BuildContext? context, String? message, String? title}) {
+  showMessage(
+      {BuildContext? context,
+      String? title = "Submit Check In Gagal",
+      String? message}) {
     return CustomBottomSheet().showCustomBottomSheet(
       context: context!,
-      title: title ?? "Terjadi Kesalahan Login!",
+      title: title,
       titleIcon: "assets/icons/ic_caution_red.svg",
       bodyContent: Column(
         mainAxisSize: MainAxisSize.min,
@@ -555,6 +258,139 @@ class _OrderOnlySalesPageState extends State<OrderOnlySalesPage> {
             withIcon: false,
             active: true,
           )),
+    );
+  }
+
+  Future<dynamic> showStoreList(
+    BuildContext context,
+    OrderOnlyStoreCubit cubit,
+  ) {
+    // variable like initState() or initCubit
+    // todo jump to value data
+
+    // todo show dropdown
+    return showModalBottomSheet(
+      context: context,
+      enableDrag: false,
+      isScrollControlled: true,
+      barrierColor: AppColors.grey600?.withOpacity(0.6),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(SizeUtils.baseRoundedCorner),
+          topRight: Radius.circular(SizeUtils.baseRoundedCorner),
+        ),
+      ),
+      builder: (context) {
+        return BlocProvider<OrderOnlyStoreCubit>(
+          create: (context) => OrderOnlyStoreCubit({})..getStoreData(),
+          child: BlocBuilder<OrderOnlyStoreCubit, OrderOnlyStoreState>(
+            builder: (context, state) {
+              var cubitDropdown = context.read<OrderOnlyStoreCubit>();
+
+              List<DataStoreSales> listToko = [];
+
+              listToko.addAll(cubitDropdown.listToko);
+
+              return openDropdownMenuWithSearch(
+                context: context,
+                searchController: searchController,
+                scrollController: scrollFilterController,
+                searchHint: "Pilih Toko",
+                emptyMessage: "Data kosong",
+                bottomSheetTitle: "Pilih Toko",
+                itemCount: (state is OrderOnlyStoreFilterLoading)
+                    ? 5
+                    : listToko.isNotEmpty
+                        ? (listToko.length == 1)
+                            ? 1
+                            : listToko.length
+                        : 0,
+                itemBuilder: (BuildContext context, int index) {
+                  if (state is OrderOnlyStoreFilterLoading) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: SizeUtils.basePaddingMargin10,
+                        horizontal: SizeUtils.basePaddingMargin16,
+                      ),
+                      child: CustomLoading.defaultShape(
+                        heightLoading: SizeUtils.baseWidthHeight12,
+                      ),
+                    );
+                  }
+
+                  var toko = listToko[index];
+                  var fontWeight = FontWeight.w400;
+                  var color = AppColors.transparent;
+
+                  if (storeController.text == toko) {
+                    fontWeight = FontWeight.w500;
+                    color = AppColors.shadeBlue;
+                  }
+
+                  return InkWell(
+                    highlightColor: AppColors.shadeBlue,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: SizeUtils.basePaddingMargin10,
+                        horizontal: SizeUtils.basePaddingMargin16,
+                      ),
+                      color: color,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "${toko.storeCode} - ${toko.storeName}",
+                            style: GoogleFonts.nunito(
+                              fontWeight: fontWeight,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    onTap: () {
+                      FocusScope.of(context).unfocus();
+                      storeController.text = toko.storeCode;
+                      namaToko.text = toko.storeName;
+                      cubit.dataStore = toko;
+
+                      searchController.clear();
+                      Navigator.pop(context);
+                      // cubit.validateInformationStep(
+                      //   odometer: odometerController.text,
+                      //   location: storeController.text,
+                      // );
+                    },
+                  );
+                },
+                searchWidget: Container(
+                  margin: const EdgeInsets.all(
+                    SizeUtils.basePaddingMargin16,
+                  ),
+                  child: InputTextFieldDefault(
+                    hint: "Cari Toko",
+                    inputType: TextInputType.text,
+                    height: SizeUtils.baseWidthHeight44,
+                    hintFontSize: SizeUtils.baseWidthHeight14,
+                    controller: searchController,
+                    onChanged: (String value) {
+                      // cubitDropdown.changeIconToClose(value);
+                      // cubitDropdown.filterLocation(location: value);
+                    },
+                    onEditComplete: () {
+                      FocusScope.of(context).unfocus();
+                    },
+                    inputFormatter: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'[a-zA-Z0-9./_, -]'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

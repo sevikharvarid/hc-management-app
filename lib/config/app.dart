@@ -16,6 +16,7 @@ import 'package:hc_management_app/features/homespg/ui/home_spg_page.dart';
 import 'package:hc_management_app/features/login/cubit/login_cubit.dart';
 import 'package:hc_management_app/features/login/ui/login_page.dart';
 import 'package:hc_management_app/features/order/cubit/order_only_cubit.dart';
+import 'package:hc_management_app/features/order/ui/order_only_list_product_page.dart';
 import 'package:hc_management_app/features/order/ui/order_only_page.dart';
 import 'package:hc_management_app/features/profile/profile_sales/cubit/profile_sales_cubit.dart';
 import 'package:hc_management_app/features/profile/profile_sales/ui/profile_sales_page.dart';
@@ -32,6 +33,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     // return ScreenUtilInit(
     return ScreenUtilInit(
       designSize: const Size(360, 690),
@@ -41,8 +43,7 @@ class MyApp extends StatelessWidget {
         title: "HC Management App",
         theme: ThemeData(
           primarySwatch: Colors.blue,
-        ),
-        // navigatorKey: AppConstant.navigatorKey(),
+        ),     
         onGenerateRoute: (RouteSettings settings) {
           switch (settings.name) {
             case Routes.landing:
@@ -126,15 +127,23 @@ class MyApp extends StatelessWidget {
                 ),
               );
             case Routes.orderOnly:
+              return CupertinoPageRoute(
+                builder: (context) => BlocProvider<OrderOnlyStoreCubit>(
+                  create: (context) => OrderOnlyStoreCubit({})..initCubit(),
+                  child: const OrderOnlyStorePage(),
+                ),
+              );
+
+            case Routes.orderOnlyInput:
               final dynamic args = settings.arguments;
               Map<String, dynamic>? data = args;
               return CupertinoPageRoute(
-                builder: (context) => BlocProvider<OrderOnlySalesCubit>(
+                builder: (context) => BlocProvider<OrderOnlyStoreCubit>(
                   create: (context) =>
-                      OrderOnlySalesCubit(data)..initOrderOnly(),
-                  child: const OrderOnlySalesPage(),
+                      OrderOnlyStoreCubit(data)..initInputSOPage(),
+                  child: const OrderOnlyListProductPage(),
                 ),
-              );  
+              );
              
             default:
               return CupertinoPageRoute(

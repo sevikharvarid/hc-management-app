@@ -12,7 +12,8 @@ class CheckInProvider {
       // String paramsUrl = "/api/stores?user_id=&search=";
       //Fix
       // String paramsUrl = "/api/stores?user_id=$params?limit=&search";
-      String paramsUrl = "/api/membersales?user_id=$params";
+      String paramsUrl =
+          "/api/membersales?user_id=${params['userId']}&limit=&search=${params['search']}";
 
       apiProvider = HttpProvider(
         baseUrl: baseUrl,

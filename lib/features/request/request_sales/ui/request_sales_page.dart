@@ -123,17 +123,17 @@ class _RequestSalesPageState extends State<RequestSalesPage> {
                               ),
                             ],
                           )
-                        :
-                    ListView.separated(
-                      padding: const EdgeInsets.only(top: 4, bottom: 20),
-                      physics: const NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
+                        : ListView.separated(
+                            padding: const EdgeInsets.only(top: 4, bottom: 20),
+                            physics: const NeverScrollableScrollPhysics(),
+                            shrinkWrap: true,
                             itemCount: cubit.visits.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: SizeUtils.basePaddingMargin2),
-                      itemBuilder: (context, index) {
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(
+                                    height: SizeUtils.basePaddingMargin2),
+                            itemBuilder: (context, index) {
                               var data = cubit.visits[index];
-                        return GestureDetector(
+                              return GestureDetector(
                                 onTap: () => onPressedCardList(cubit, data),
                                 child: VisitCardItem(
                                   attendanceDateIn: data.inDate != null
@@ -155,10 +155,10 @@ class _RequestSalesPageState extends State<RequestSalesPage> {
                                   storeName: data.storeName ?? '-',
                                   storeCode: data.storeCode ?? '-',
                                   soNumber: "S0XXXXX9",
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
                   ],
                 ),
               )
@@ -173,14 +173,28 @@ class _RequestSalesPageState extends State<RequestSalesPage> {
     bool gpsStatus = await cubit.checkAndTurnOnGPS();
 
     if (gpsStatus) {
-      Navigator.pushNamed(
-        context,
-        Routes.checkoutSales,
-        arguments: {
-          'data': data,
-          'isFromHome': false,
-        },
-      );
+      // jika
+      if (data!.image!.contains("order_only") ||
+          data.inLat == 'order_only' ||
+          data.inLong == 'order_only') {
+        Navigator.pushNamed(
+          context,
+          Routes.orderOnly,
+          arguments: {
+            'data': data,
+            'isFromHome': false,
+          },
+        );
+      } else {
+        Navigator.pushNamed(
+          context,
+          Routes.checkoutSales,
+          arguments: {
+            'data': data,
+            'isFromHome': false,
+          },
+        );
+      }
     } else {
       onPressedCardList(cubit, data);
     }

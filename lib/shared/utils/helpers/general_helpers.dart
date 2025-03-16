@@ -7,6 +7,7 @@ import 'package:hc_management_app/shared/utils/constant/app_constant.dart';
 import 'package:image/image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:ntp/ntp.dart';
 import 'package:path_provider/path_provider.dart';
 
 class GeneralHelper {
@@ -24,7 +25,7 @@ class GeneralHelper {
       currentPosition.latitude,
       currentPosition.longitude,
     );
-    
+
     return radius;
   }
 
@@ -107,19 +108,20 @@ class GeneralHelper {
     return date;
   }
 
-  Future<File?> pickImage(
-      {bool? camera = true, CameraDevice? preferredCameraDevice}) async {
+  Future<File?> pickImage({bool? camera = true}) async {
     final ImagePicker picker = ImagePicker();
     XFile? pickerImage;
 
     pickerImage = await picker.pickImage(
       source: camera! ? ImageSource.camera : ImageSource.gallery,
-      preferredCameraDevice: preferredCameraDevice ?? CameraDevice.rear,
+      preferredCameraDevice: CameraDevice.rear,
       imageQuality: 50,
     );
 
     File? pickedImage;
-    pickedImage = File(pickerImage!.path);
+    if (pickerImage != null) {
+      pickedImage = File(pickerImage.path);
+    }
     return pickedImage;
   }
 
@@ -161,5 +163,9 @@ class GeneralHelper {
     return acceptedImaged.contains(file.path.split(".").last);
   }
 
+  Future<DateTime> getNtpTime() async {
+    DateTime ntpTime = await NTP.now();
+    return ntpTime;
+  }
 
 }
