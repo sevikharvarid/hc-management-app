@@ -260,6 +260,7 @@ class _CheckInPageState extends State<CheckInPage> {
                               message: "Harap lengkapi form terlebih dahulu",
                             );
                           } else {
+                            log("apakah berhasil ke sini ?");
                             cubit.postData(
                               notes: noteSales.text,
                               storeName: namaToko.text,

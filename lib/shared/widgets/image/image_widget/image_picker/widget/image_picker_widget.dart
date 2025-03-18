@@ -395,22 +395,22 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
                 const EdgeInsets.only(bottom: SizeUtils.basePaddingMargin16),
             child: Column(children: [
               // pick image from gallery
-              imagePickerSourceWidget(
-                label: "Pilih dari Gallery",
-                imageUrl: "assets/icons/ic_camera.svg",
-                action: () {
-                  cubit.openImagePicker(
-                    index: index,
-                    camera: false,
-                    quality: widget.quality,
-                    userName: widget.userName,
-                    storeName: widget.storeName,
-                    notes: widget.notes,
-                  );
-                  Navigator.pop(context);
-                },
-              ),
-              customHorizontalDivider(height: SizeUtils.baseWidthHeight1),
+              // imagePickerSourceWidget(
+              //   label: "Pilih dari Gallery",
+              //   imageUrl: "assets/icons/ic_camera.svg",
+              //   action: () {
+              //     cubit.openImagePicker(
+              //       index: index,
+              //       camera: false,
+              //       quality: widget.quality,
+              //       userName: widget.userName,
+              //       storeName: widget.storeName,
+              //       notes: widget.notes,
+              //     );
+              //     Navigator.pop(context);
+              //   },
+              // ),
+              // customHorizontalDivider(height: SizeUtils.baseWidthHeight1),
 
               // pick image from camera
               imagePickerSourceWidget(

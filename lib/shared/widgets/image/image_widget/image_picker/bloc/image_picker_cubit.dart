@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -67,7 +66,7 @@ class ImagePickerCubit extends Cubit<ImagePickerState> {
 
         // Ambil lokasi pengguna
         String userAddress = await getCurrentAddress();
-        debugPrint("storeName : $storeName");
+        log("storeName : $storeName");
 
         final watermarkedImage = await addCustomWatermark(
             convertedImage, userAddress, notes, userName, storeName);
