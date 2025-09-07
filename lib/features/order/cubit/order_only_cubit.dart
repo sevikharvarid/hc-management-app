@@ -405,7 +405,10 @@ class OrderOnlyStoreCubit extends Cubit<OrderOnlyStoreState> {
 
     var userId = await preferences.read(PreferencesKey.userId);
 
-    var params = userId;
+    // var params = userId;
+    var params = {
+      'userId': userId,
+    };
 
     final response = await orderOnlyStoreRepository.getStoreData(params);
 

@@ -34,12 +34,10 @@ class HomeCubit extends Cubit<HomeState> {
   bool isReadOnlyStore = false;
   DataStoreSales? dataStore;
 
-
   Preferences preferences = Preferences();
   GeneralHelper generalHelper = GeneralHelper();
   HomeSalesRepository homeSalesRepository = HomeSalesRepository();
   CheckInRepository checkInRepository = CheckInRepository();
-
 
   late BuildContext mContext = AppConstant.navigatorKey.currentContext!;
 
@@ -58,8 +56,6 @@ class HomeCubit extends Cubit<HomeState> {
     name = await preferences.read(PreferencesKey.name);
 
     photoProfile = await preferences.read(PreferencesKey.profilePhoto);
-
-
 
     String userLogin = await preferences.read(PreferencesKey.userLogin);
     userLogin = userLogin.replaceAll('{', '').replaceAll('}', '');
@@ -157,17 +153,45 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<bool> checkAndTurnOnGPS() async {
+    emit(HomeLoading());
     Location location = Location();
     bool isOn = await location.serviceEnabled();
 
     if (!isOn) {
       bool isTurnedOn = await location.requestService();
       if (isTurnedOn) {
+        emit(HomeNavigateLoaded());
         return true;
       } else {
+        emit(HomeNavigateLoaded());
+
         return false;
       }
     } else {
+      emit(HomeNavigateLoaded());
+
+      return true;
+    }
+  }
+
+  Future<bool> checkAndTurnOnGPSForOrderOnly() async {
+    emit(HomeLoading());
+    Location location = Location();
+    bool isOn = await location.serviceEnabled();
+
+    if (!isOn) {
+      bool isTurnedOn = await location.requestService();
+      if (isTurnedOn) {
+        emit(HomeNavigateOrderLoaded());
+        return true;
+      } else {
+        emit(HomeNavigateOrderLoaded());
+
+        return false;
+      }
+    } else {
+      emit(HomeNavigateOrderLoaded());
+
       return true;
     }
   }
@@ -201,5 +225,4 @@ class HomeCubit extends Cubit<HomeState> {
       state: isChecked,
     ));
   }
-
 }

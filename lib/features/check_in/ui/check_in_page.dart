@@ -211,6 +211,7 @@ class _CheckInPageState extends State<CheckInPage> {
                       top: SizeUtils.basePaddingMargin10,
                     ),
                     child: ImagePickerWidget(
+                      userAddress: cubit.userAddress,
                       userName: cubit.userName,
                       storeName: storeName,
                       notes: cubit.notes,

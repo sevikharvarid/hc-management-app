@@ -26,6 +26,7 @@ import 'package:hc_management_app/shared/widgets/image/image_network_rectangle.d
 import 'package:hc_management_app/shared/widgets/text_field/custom_text_field.dart';
 import 'package:hc_management_app/shared/widgets/text_field/input_text_field_default.dart';
 import 'package:intl/intl.dart';
+import 'package:location/location.dart';
 
 class HomePage extends StatefulWidget {
   final VoidCallback? onClickViewAll;
@@ -101,6 +102,29 @@ class _HomePageState extends State<HomePage> {
         if (state is HomeLoaded) {
           Navigator.pop(context);
           cubit.checkGPS();
+        }
+
+        if (state is HomeNavigateLoaded) {
+          Navigator.pop(context);
+
+          Navigator.push(
+            context,
+            CupertinoPageRoute(
+              builder: (_) => const CheckInPage(),
+            ),
+          );
+        }
+
+        if (state is HomeNavigateOrderLoaded) {
+          Navigator.pop(context);
+
+          Navigator.pushNamed(
+            context,
+            Routes.orderOnly,
+            arguments: {
+              'data': null,
+            },
+          );
         }
 
         if (state is HomeSuccessGet) {}
@@ -407,41 +431,81 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void onPressedCheckIn(HomeCubit cubit) async {
-    bool gpsStatus = await cubit.checkAndTurnOnGPS();
-
-    if (gpsStatus) {
+  void onPressedCheckIn(HomeCubit cubit) {
+    // await cubit.checkAndTurnOnGPS().then((value) {
+    //   debugPrint("testing : $value");
+    //   if (!value) {
+    //     onPressedCheckIn(cubit);
+    //   }
+    // if (value) {
       Navigator.push(
         context,
         CupertinoPageRoute(
           builder: (_) => const CheckInPage(),
         ),
       );
-    } else {
-      onPressedCheckIn(cubit);
-    }
+    // } else {
+    // onPressedCheckIn(cubit);
+    // }
+    // });
   }
 
   void onPressedOrderOnly(HomeCubit cubit) async {
-    bool gpsStatus = await cubit.checkAndTurnOnGPS();
+    await cubit.checkAndTurnOnGPSForOrderOnly().then((value) {
+      debugPrint("testing : $value");
+      if (!value) {
+        onPressedOrderOnly(cubit);
+      }
+      // if (value) {
+      //   if (context.mounted) {
+      //     Navigator.push(
+      //       context,
+      //       CupertinoPageRoute(
+      //         builder: (_) => const CheckInPage(),
+      //       ),
+      //     );
+      //   }
+      // } else {
+      //   onPressedCheckIn(cubit);
+      // }
+    });
+    // bool gpsStatus = await cubit.checkAndTurnOnGPS();
 
-    if (gpsStatus) {
-      Navigator.pushNamed(
-        context,
-        Routes.orderOnly,
-        arguments: {
-          'data': null,
-        },
-      );
+    // if (gpsStatus) {
+    //   Navigator.pushNamed(
+    //     context,
+    //     Routes.orderOnly,
+    //     arguments: {
+    //       'data': null,
+    //     },
+    //   );
+    // } else {
+    //   onPressedOrderOnly(
+    //     cubit,
+    //   );
+    // }
+  }
+
+  Future<bool> checkAndTurnOnGPSFromList() async {
+    Location location = Location();
+    bool isOn = await location.serviceEnabled();
+
+    if (!isOn) {
+      bool isTurnedOn = await location.requestService();
+      if (isTurnedOn) {
+        return true;
+      } else {
+  
+        return false;
+      }
     } else {
-      onPressedOrderOnly(
-        cubit,
-      );
+      return true;
     }
   }
 
+
   void onPressedCardList(HomeCubit cubit, VisitData? data) async {
-    bool gpsStatus = await cubit.checkAndTurnOnGPS();
+    bool gpsStatus = await checkAndTurnOnGPSFromList();
 
     log("DATA GEDE BANGET :${const JsonEncoder.withIndent(' ').convert(data)}");
 

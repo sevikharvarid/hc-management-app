@@ -2,12 +2,14 @@ import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hc_management_app/shared/utils/constant/app_constant.dart';
 import 'package:image/image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:ntp/ntp.dart';
+import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
 class GeneralHelper {
@@ -166,6 +168,35 @@ class GeneralHelper {
   Future<DateTime> getNtpTime() async {
     DateTime ntpTime = await NTP.now();
     return ntpTime;
+  }
+
+  Future<File?> compressAndConvertToJPG({
+    required File file,
+    required int? quality,
+  }) async {
+    // Get the temporary directory
+    Directory tempDir = await getTemporaryDirectory();
+    String temporaryPath = tempDir.path;
+
+    // Get the original file name without extension
+    String originalFileName = basenameWithoutExtension(file.path);
+
+    // Compress and convert image to JPG
+    final jpgBytes = await FlutterImageCompress.compressWithFile(
+      file.path,
+      format: CompressFormat.jpeg,
+      quality: quality!,
+    );
+
+    if (jpgBytes == null) {
+      return null;
+    }
+
+    // Save the JPG file
+    File jpgFile = File('$temporaryPath/$originalFileName.jpg');
+    await jpgFile.writeAsBytes(jpgBytes);
+
+    return jpgFile;
   }
 
 }

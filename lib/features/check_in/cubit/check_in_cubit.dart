@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/rendering.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hc_management_app/config/service/background_service_init.dart';
 import 'package:hc_management_app/domain/model/stores.dart';
@@ -44,6 +45,7 @@ class CheckInCubit extends Cubit<CheckInState> {
   late String? userName = '';
   late String? storeName = '';
   late String? notes = '';
+  late String? userAddress = '';
 
   void initCubit() async {
     var params = await preferences.read(PreferencesKey.userId);
@@ -55,10 +57,16 @@ class CheckInCubit extends Cubit<CheckInState> {
 
     await getStoreData();
 
+    // Ambil lokasi pengguna
+    String userAddress = await getCurrentAddress();
+
+    log("storeName : $storeName");
+
     totalImage = response.data['total_image'];
 
     userName = response.data['name'];
     notes = response.data['notes'];
+    userAddress = userAddress;
     log("response : $totalImage");
 
     emit(CheckInLoaded());
@@ -134,7 +142,6 @@ class CheckInCubit extends Cubit<CheckInState> {
       'user_login': jsonEncode(users.toJson()),
       'user_id': userId,
     };
-
 
     final response =
         await checkInRepository.postSubmitData(params, 'in', null, images);
@@ -243,8 +250,47 @@ class CheckInCubit extends Cubit<CheckInState> {
     emit(CheckInFilterLoaded());
   }
 
+  // Fungsi mendapatkan alamat real-time
+  Future<String> getCurrentAddress() async {
+    try {
+      // Pastikan izin lokasi diberikan
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        return "Lokasi tidak aktif";
+      }
 
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.deniedForever) {
+          return "Izin lokasi ditolak";
+        }
+        if (permission == LocationPermission.denied) {
+          return "Izin lokasi belum diberikan";
+        }
+      }
 
+      // Ambil koordinat saat ini
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      // Konversi koordinat ke alamat
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks.first;
+        return "${place.street}, ${place.subLocality}, ${place.locality}, ${place.country}";
+      } else {
+        return "Alamat tidak ditemukan";
+      }
+    } catch (e) {
+      return "Gagal mendapatkan alamat";
+    }
+  }
 }
 
 class CheckInService {

@@ -3,8 +3,6 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:hc_management_app/shared/utils/helpers/general_helpers.dart';
 import 'package:hc_management_app/shared/utils/helpers/image_helper.dart';
 import 'package:hc_management_app/shared/widgets/image/image_widget/image_picker/bloc/image_picker_state.dart';
@@ -50,6 +48,7 @@ class ImagePickerCubit extends Cubit<ImagePickerState> {
     String? userName,
     String? storeName,
     String? notes,
+    String? userAddress,
     CameraDevice? preferredCameraDevice,
   }) async {
     try {
@@ -59,28 +58,36 @@ class ImagePickerCubit extends Cubit<ImagePickerState> {
       );
 
       if (pickedImage != null) {
-        final convertedImage = await generalHelper.convertImageToJpg(
-          file: pickedImage,
-          quality: quality,
-        );
-
-        // Ambil lokasi pengguna
-        String userAddress = await getCurrentAddress();
-        log("storeName : $storeName");
-
-        final watermarkedImage = await addCustomWatermark(
-            convertedImage, userAddress, notes, userName, storeName);
-
-        String fileName = watermarkedImage.path.split('scaled_').last;
-
-        // String fileName = convertedImage.path.split('scaled_').last;
+        var compressImage = pickedImage;
 
         if (!camera) {
-          if (!generalHelper.validateImageSize(file: watermarkedImage)) {
-            emit(ImagePickerRejected(fileName: fileName));
+          if (!generalHelper.validateImageSize(file: compressImage)) {
+            emit(ImagePickerRejected(
+                fileName: compressImage.path.split('/').last));
             return;
           }
         }
+
+        if (!generalHelper.validateImageSize(file: compressImage)) {
+          emit(ImagePickerRejected(
+              fileName: compressImage.path.split('/').last));
+          return;
+        }
+
+       
+
+        final watermarkedImage = await addCustomWatermark(
+            compressImage, userAddress, notes, userName, storeName);
+
+        final convertedImage = await generalHelper.compressAndConvertToJPG(
+          file: watermarkedImage,
+          quality: quality,
+        );
+
+
+        compressImage = convertedImage!;
+
+        String fileName = compressImage.path.split('scaled_').last;
 
         if (index == null || (index == 0 && pickedImageFile!.isEmpty)) {
           pickedImageIsUploading!.add(true);
@@ -94,12 +101,11 @@ class ImagePickerCubit extends Cubit<ImagePickerState> {
           if (index == null || (index == 0 && pickedImageFile!.isEmpty)) {
             pickedImageName!.add(fileName);
             pickedImageFile = List.from(pickedImageFile!);
-
-            pickedImageFile!.add(watermarkedImage);
+            pickedImageFile!.add(compressImage);
             pickedImageIsUploading!.last = false;
           } else {
             pickedImageName![index] = fileName;
-            pickedImageFile![index] = watermarkedImage;
+            pickedImageFile![index] = compressImage;
             pickedImageIsUploading![index] = false;
           }
         });
@@ -128,47 +134,5 @@ class ImagePickerCubit extends Cubit<ImagePickerState> {
     pickedImageIsUploading!.clear();
 
     emit(ImagePickerDeleted());
-  }
-
-  // Fungsi mendapatkan alamat real-time
-  Future<String> getCurrentAddress() async {
-    try {
-      // Pastikan izin lokasi diberikan
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        return "Lokasi tidak aktif";
-      }
-
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.deniedForever) {
-          return "Izin lokasi ditolak";
-        }
-        if (permission == LocationPermission.denied) {
-          return "Izin lokasi belum diberikan";
-        }
-      }
-
-      // Ambil koordinat saat ini
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-
-      // Konversi koordinat ke alamat
-      List<Placemark> placemarks = await placemarkFromCoordinates(
-        position.latitude,
-        position.longitude,
-      );
-
-      if (placemarks.isNotEmpty) {
-        Placemark place = placemarks.first;
-        return "${place.street}, ${place.subLocality}, ${place.locality}, ${place.country}";
-      } else {
-        return "Alamat tidak ditemukan";
-      }
-    } catch (e) {
-      return "Gagal mendapatkan alamat";
-    }
   }
 }

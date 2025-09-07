@@ -39,6 +39,7 @@ class ImagePickerWidget extends StatefulWidget {
   final String? userName;
   final String? storeName;
   final String? notes;
+  final String? userAddress;
 
   const ImagePickerWidget({
     super.key,
@@ -58,6 +59,7 @@ class ImagePickerWidget extends StatefulWidget {
     this.userName = '',
     this.storeName = '',
     this.notes = '',
+    this.userAddress = '',
   });
 
   @override
@@ -424,6 +426,7 @@ class ImagePickerWidgetState extends State<ImagePickerWidget> {
                     userName: widget.userName,
                     storeName: widget.storeName,
                     notes: widget.notes,
+                    userAddress: widget.userAddress,
                   );
                   Navigator.pop(context);
                 },

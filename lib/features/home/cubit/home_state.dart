@@ -19,6 +19,15 @@ class HomeLoaded extends HomeState {
   List<Object> get props => [];
 }
 
+class HomeNavigateLoaded extends HomeState {
+  @override
+  List<Object> get props => [];
+}
+
+class HomeNavigateOrderLoaded extends HomeState {
+  @override
+  List<Object> get props => [];
+}
 
 class HomeSuccessGet extends HomeState {
   @override

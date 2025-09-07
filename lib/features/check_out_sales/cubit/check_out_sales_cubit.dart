@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hc_management_app/domain/model/products.dart';
@@ -138,7 +139,46 @@ class CheckOutSalesCubit extends Cubit<CheckOutSalesState> {
     currentIndex = index!;
 
     if (currentIndex == 0) {
+      debugPrint("apakah e sini ?");
       // state form
+      // initCheckoutSalesCubit();
+      emit(CheckOutSalesLoading());
+
+      visitData = data!['data'];
+
+      inDate = visitData!.inDate != null
+          ? generalHelper.convertDateToString(
+              dateFormat: "EEEE, dd MMMM yyyy",
+              dateTime: DateTime.parse(visitData!.inDate!),
+            )
+          : '-';
+      outDate = visitData!.outDate != null
+          ? generalHelper.convertDateToString(
+              dateFormat: "EEEE, dd MMMM yyyy",
+              dateTime: DateTime.parse(visitData!.outDate!),
+            )
+          : '-';
+
+      log("visitData.inLat : ${visitData!.inLat}");
+      log("visitData.inLong : ${visitData!.inLong}");
+      if (visitData!.inLat != null && visitData!.inLong != null) {
+        origin = await getAddressFromLatLng(
+            double.parse(visitData!.inLat!), double.parse(visitData!.inLong!));
+      }
+
+      if (visitData!.outLat != null && visitData!.outLong != null) {
+        destination = await getAddressFromLatLng(
+            double.parse(visitData!.outLat!),
+            double.parse(visitData!.outLong!));
+      }
+
+      List<String>? imageCheckin =
+          List<String>.from(jsonDecode(visitData!.image!));
+      // log("response : ${visitData!.image!}");
+      // log("response : ${visitData!.image!.runtimeType}");
+      checkInImage = imageCheckin[0];
+      inTime = visitData!.inTime;
+      outTime = visitData!.outTime;
       emit(CheckOutSalesCheckout());
       return;
     }
